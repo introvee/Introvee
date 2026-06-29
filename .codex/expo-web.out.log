@@ -1,0 +1,317 @@
+
+> bravestep@1.0.0 web
+> expo start --web --port 8081
+
+env: load .env
+env: export EXPO_PUBLIC_SUPABASE_ANON_KEY EXPO_PUBLIC_SUPABASE_URL
+Starting project at D:\Introvert App\Introvert App
+Starting Metro Bundler
+
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web Bundled 1474ms node_modules\expo\AppEntry.js (2387 modules)
+› Detected a change in babel.config.js. Restart the server to see the new results. You may need to clear the bundler cache with the --clear flag for your changes to take effect.
+Web Bundled 32791ms node_modules\expo\AppEntry.js (1 module)
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+Web  WARN  Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md
+Web Bundled 69ms node_modules\expo\AppEntry.js (1 module)
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+Web  WARN  Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md
+Web  DEBUG  #1 1ms Starting document clone with size 414x896 scrolled to 0,0
+Web  DEBUG  #1 959ms Document cloned, element located at 32,176.453125 with size 350x437.5 using computed rendering
+Web  DEBUG  #1 959ms Starting DOM parsing
+Web  DEBUG  #1 998ms Added image data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216px%22%20height%3D%2216px%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22roun
+Web  DEBUG  #1 1000ms Added image data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216px%22%20height%3D%2216px%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23FFFFFF%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22rou
+Web  DEBUG  #1 1004ms Added image data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2217px%22%20height%3D%2217px%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22roun
+Web  DEBUG  #1 1008ms Added image data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2213px%22%20height%3D%2213px%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%23B7FF2A%22%20stroke%3D%22%23B7FF2A%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%2
+Web  DEBUG  #1 1009ms Starting renderer for element at 32,176.453125 with size 350x438
+Web  DEBUG  #1 1010ms Canvas renderer initialized (350x438) with scale 2
+Web  DEBUG  #1 1061ms Finished rendering
+Web  WARN  An error occurred in the <ForwardRef(AchievementPoster)> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+Web  ERROR  [ReferenceError: Flame is not defined] 
+
+Code: DareCompletedScreen.tsx
+[0m [90m 238 |[39m       [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+ [90m 239 |[39m       [33m<[39m[33mView[39m style[33m=[39m{posterStyles[33m.[39mstickerTwo}[33m>[39m
+[31m[1m>[22m[39m[90m 240 |[39m         [33m<[39m[33mFlame[39m color[33m=[39m{theme[33m.[39mlight} size[33m=[39m{[35m16[39m} strokeWidth[33m=[39m{[35m2.35[39m} [33m/[39m[33m>[39m
+ [90m     |[39m          [31m[1m^[22m[39m
+ [90m 241 |[39m       [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+ [90m 242 |[39m
+ [90m 243 |[39m       [33m<[39m[33mView[39m style[33m=[39m{posterStyles[33m.[39mphotoStage}[33m>[39m[0m
+Call Stack
+  AchievementPoster (src\screens\DareCompletedScreen.tsx:240:10) 
+
+Code: DareCompletedScreen.tsx
+[0m [90m 159 |[39m
+ [90m 160 |[39m         [33m<[39m[33mView[39m style[33m=[39m{[styles[33m.[39mposterShadow[33m,[39m responsive[33m.[39mposterShadow]}[33m>[39m
+[31m[1m>[22m[39m[90m 161 |[39m           [33m<[39m[33mAchievementPoster[39m
+ [90m     |[39m           [31m[1m^[22m[39m
+ [90m 162 |[39m             ref[33m=[39m{posterRef}
+ [90m 163 |[39m             userImage[33m=[39m{userImage}
+ [90m 164 |[39m             userName[33m=[39m{userName}[0m
+Call Stack
+  DareCompletedScreen (src\screens\DareCompletedScreen.tsx:161:11)
+  RootNavigator (src\navigation\AppNavigator.tsx:90:5)
+  App (App.tsx:29:7)
+Web Bundled 96ms node_modules\expo\AppEntry.js (1 module)
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+Web  WARN  Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md
+Web  WARN  An error occurred in the <DareCompletedScreen> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+Web  ERROR  [ReferenceError: getSupportMessage is not defined] 
+
+Code: DareCompletedScreen.tsx
+[0m [90m 78 |[39m   [36mconst[39m dareAction [33m=[39m formatCompletedAction(completedDareTitle)[33m;[39m
+ [90m 79 |[39m   [36mconst[39m shareText [33m=[39m [32m`I completed today's introvert dare: ${formatDareHighlight(completedDareTitle)}. One step closer to confidence.`[39m[33m;[39m
+[31m[1m>[22m[39m[90m 80 |[39m   [36mconst[39m supportMessage [33m=[39m getSupportMessage(completedDareTitle)[33m;[39m
+ [90m    |[39m                          [31m[1m^[22m[39m
+ [90m 81 |[39m
+ [90m 82 |[39m   [36masync[39m [36mfunction[39m sharePoster() {
+ [90m 83 |[39m     setIsSharing([36mtrue[39m)[33m;[39m[0m
+Call Stack
+  DareCompletedScreen (src\screens\DareCompletedScreen.tsx:80:26) 
+
+Code: AppNavigator.tsx
+[0m [90m 88 |[39m
+ [90m 89 |[39m   [36mreturn[39m (
+[31m[1m>[22m[39m[90m 90 |[39m     [33m<[39m[33mRootStack[39m[33m.[39m[33mNavigator[39m screenOptions[33m=[39m{{ headerShown[33m:[39m [36mfalse[39m }}[33m>[39m
+ [90m    |[39m     [31m[1m^[22m[39m
+ [90m 91 |[39m       {[33m![39muser [33m?[39m (
+ [90m 92 |[39m         [33m<[39m[33mRootStack[39m[33m.[39m[33mScreen[39m key[33m=[39m[32m"signed-out"[39m name[33m=[39m[32m"Auth"[39m component[33m=[39m{[33mAuthNavigator[39m} [33m/[39m[33m>[39m
+ [90m 93 |[39m       ) [33m:[39m [33m![39mprofile[33m?[39m[33m.[39monboarding_completed [33m?[39m ([0m
+Call Stack
+  RootNavigator (src\navigation\AppNavigator.tsx:90:5)
+  App (App.tsx:29:7)
+Web Bundled 82ms node_modules\expo\AppEntry.js (1 module)
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+Web  WARN  Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md
+Web  WARN  An error occurred in the <button> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+Web  ERROR  [Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `DareCompletedScreen`.] 
+
+Code: DareCompletedScreen.tsx
+[0m [90m 183 |[39m           [33m<[39m[33m/[39m[33mSocialButton[39m[33m>[39m
+ [90m 184 |[39m           [33m<[39m[33mSocialButton[39m label[33m=[39m[32m"Instagram"[39m onPress[33m=[39m{() [33m=>[39m shareTextTarget([32m'instagram'[39m)}[33m>[39m
+[31m[1m>[22m[39m[90m 185 |[39m             [33m<[39m[33mInstagram[39m color[33m=[39m[32m"#FFFFFF"[39m size[33m=[39m{[35m19[39m} strokeWidth[33m=[39m{[35m2.15[39m} [33m/[39m[33m>[39m
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 186 |[39m           [33m<[39m[33m/[39m[33mSocialButton[39m[33m>[39m
+ [90m 187 |[39m           [33m<[39m[33mSocialButton[39m label[33m=[39m[32m"X"[39m onPress[33m=[39m{() [33m=>[39m shareTextTarget([32m'x'[39m)}[33m>[39m
+ [90m 188 |[39m             [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mxIcon}[33m>[39m[33mX[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m[0m
+Call Stack
+  DareCompletedScreen (src\screens\DareCompletedScreen.tsx:185:13)
+  RootNavigator (src\navigation\AppNavigator.tsx:90:5)
+  App (App.tsx:29:7)
+Web  WARN  An error occurred in the <button> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+Web  ERROR  [Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `DareCompletedScreen`.] 
+
+Code: DareCompletedScreen.tsx
+[0m [90m 183 |[39m           [33m<[39m[33m/[39m[33mSocialButton[39m[33m>[39m
+ [90m 184 |[39m           [33m<[39m[33mSocialButton[39m label[33m=[39m[32m"Instagram"[39m onPress[33m=[39m{() [33m=>[39m shareTextTarget([32m'instagram'[39m)}[33m>[39m
+[31m[1m>[22m[39m[90m 185 |[39m             [33m<[39m[33mInstagram[39m color[33m=[39m[32m"#FFFFFF"[39m size[33m=[39m{[35m19[39m} strokeWidth[33m=[39m{[35m2.15[39m} [33m/[39m[33m>[39m
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 186 |[39m           [33m<[39m[33m/[39m[33mSocialButton[39m[33m>[39m
+ [90m 187 |[39m           [33m<[39m[33mSocialButton[39m label[33m=[39m[32m"X"[39m onPress[33m=[39m{() [33m=>[39m shareTextTarget([32m'x'[39m)}[33m>[39m
+ [90m 188 |[39m             [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mxIcon}[33m>[39m[33mX[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m[0m
+Call Stack
+  DareCompletedScreen (src\screens\DareCompletedScreen.tsx:185:13)
+  RootNavigator (src\navigation\AppNavigator.tsx:90:5)
+  App (App.tsx:29:7)
+Web  WARN  An error occurred in the <button> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+Web  ERROR  [Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `DareCompletedScreen`.] 
+
+Code: DareCompletedScreen.tsx
+[0m [90m 183 |[39m           [33m<[39m[33m/[39m[33mSocialButton[39m[33m>[39m
+ [90m 184 |[39m           [33m<[39m[33mSocialButton[39m label[33m=[39m[32m"Instagram"[39m onPress[33m=[39m{() [33m=>[39m shareTextTarget([32m'instagram'[39m)}[33m>[39m
+[31m[1m>[22m[39m[90m 185 |[39m             [33m<[39m[33mInstagram[39m color[33m=[39m[32m"#FFFFFF"[39m size[33m=[39m{[35m19[39m} strokeWidth[33m=[39m{[35m2.15[39m} [33m/[39m[33m>[39m
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 186 |[39m           [33m<[39m[33m/[39m[33mSocialButton[39m[33m>[39m
+ [90m 187 |[39m           [33m<[39m[33mSocialButton[39m label[33m=[39m[32m"X"[39m onPress[33m=[39m{() [33m=>[39m shareTextTarget([32m'x'[39m)}[33m>[39m
+ [90m 188 |[39m             [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mxIcon}[33m>[39m[33mX[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m[0m
+Call Stack
+  DareCompletedScreen (src\screens\DareCompletedScreen.tsx:185:13)
+  RootNavigator (src\navigation\AppNavigator.tsx:90:5)
+  App (App.tsx:29:7)
+Web Bundled 2159ms node_modules\expo\AppEntry.js (1 module)
+Web  INFO  %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web Bundled 94ms node_modules\expo\AppEntry.js (1 module)
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+Web  WARN  Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md
+Unable to resolve "../screens/DareCompletedScreen" from "src\navigation\AppNavigator.tsx"
+[0m [90m 10 |[39m [36mimport[39m { [33mProfileScreen[39m } [36mfrom[39m [32m'../screens/ProfileScreen'[39m[33m;[39m
+ [90m 11 |[39m [36mimport[39m { [33mDareInProgressScreen[39m } [36mfrom[39m [32m'../screens/DareInProgressScreen'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mDareCompletedScreen[39m } [36mfrom[39m [32m'../screens/DareCompletedScreen'[39m[33m;[39m
+ [90m    |[39m                                      [31m[1m^[22m[39m
+ [90m 13 |[39m [36mimport[39m { [33mShareWinScreen[39m } [36mfrom[39m [32m'../screens/ShareWinScreen'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m { useAuthStore } [36mfrom[39m [32m'../store/useAuthStore'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m { useProfileStore } [36mfrom[39m [32m'../store/useProfileStore'[39m[33m;[39m[0m
+
+Import stack:
+
+ src\navigation\AppNavigator.tsx
+ | import "../screens/DareCompletedScreen"
+
+ App.tsx
+ | import "./src/navigation/AppNavigator"
+
+ node_modules\expo\AppEntry.js
+ | import "../../App"
+
+ 
+ | import "./node_modules/expo/AppEntry"
+
+Web  ERROR  [UnableToResolveError: Unable to resolve module ../screens/DareCompletedScreen from D:\Introvert App\Introvert App\src\navigation\AppNavigator.tsx: 
+
+None of these files exist:
+  * src\screens\DareCompletedScreen(.web.ts|.ts|.web.tsx|.tsx|.web.mjs|.mjs|.web.js|.js|.web.jsx|.jsx|.web.json|.json|.web.cjs|.cjs|.web.scss|.scss|.web.sass|.sass|.web.css|.css)
+  * src\screens\DareCompletedScreen
+  10 | import { ProfileScreen } from '../screens/ProfileScreen';
+  11 | import { DareInProgressScreen } from '../screens/DareInProgressScreen';
+> 12 | import { DareCompletedScreen } from '../screens/DareCompletedScreen';
+     |                                      ^
+  13 | import { ShareWinScreen } from '../screens/ShareWinScreen';
+  14 | import { useAuthStore } from '../store/useAuthStore';
+  15 | import { useProfileStore } from '../store/useProfileStore';]
+Unable to resolve "../screens/DareCompletedScreen" from "src\navigation\AppNavigator.tsx"
+[0m [90m 10 |[39m [36mimport[39m { [33mProfileScreen[39m } [36mfrom[39m [32m'../screens/ProfileScreen'[39m[33m;[39m
+ [90m 11 |[39m [36mimport[39m { [33mDareInProgressScreen[39m } [36mfrom[39m [32m'../screens/DareInProgressScreen'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mDareCompletedScreen[39m } [36mfrom[39m [32m'../screens/DareCompletedScreen'[39m[33m;[39m
+ [90m    |[39m                                      [31m[1m^[22m[39m
+ [90m 13 |[39m [36mimport[39m { [33mShareWinScreen[39m } [36mfrom[39m [32m'../screens/ShareWinScreen'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m { useAuthStore } [36mfrom[39m [32m'../store/useAuthStore'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m { useProfileStore } [36mfrom[39m [32m'../store/useProfileStore'[39m[33m;[39m[0m
+
+Import stack:
+
+ src\navigation\AppNavigator.tsx
+ | import "../screens/DareCompletedScreen"
+
+ App.tsx
+ | import "./src/navigation/AppNavigator"
+
+ node_modules\expo\AppEntry.js
+ | import "../../App"
+
+ 
+ | import "./node_modules/expo/AppEntry"
+
+Web  ERROR  [UnableToResolveError: Unable to resolve module ../screens/DareCompletedScreen from D:\Introvert App\Introvert App\src\navigation\AppNavigator.tsx: 
+
+None of these files exist:
+  * src\screens\DareCompletedScreen(.web.ts|.ts|.web.tsx|.tsx|.web.mjs|.mjs|.web.js|.js|.web.jsx|.jsx|.web.json|.json|.web.cjs|.cjs|.web.scss|.scss|.web.sass|.sass|.web.css|.css)
+  * src\screens\DareCompletedScreen
+  10 | import { ProfileScreen } from '../screens/ProfileScreen';
+  11 | import { DareInProgressScreen } from '../screens/DareInProgressScreen';
+> 12 | import { DareCompletedScreen } from '../screens/DareCompletedScreen';
+     |                                      ^
+  13 | import { ShareWinScreen } from '../screens/ShareWinScreen';
+  14 | import { useAuthStore } from '../store/useAuthStore';
+  15 | import { useProfileStore } from '../store/useProfileStore';]
+Web Bundling failed 372ms node_modules\expo\AppEntry.js (1 module)
+Unable to resolve "../screens/DareCompletedScreen" from "src\navigation\AppNavigator.tsx"
+[0m [90m 10 |[39m [36mimport[39m { [33mProfileScreen[39m } [36mfrom[39m [32m'../screens/ProfileScreen'[39m[33m;[39m
+ [90m 11 |[39m [36mimport[39m { [33mDareInProgressScreen[39m } [36mfrom[39m [32m'../screens/DareInProgressScreen'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mDareCompletedScreen[39m } [36mfrom[39m [32m'../screens/DareCompletedScreen'[39m[33m;[39m
+ [90m    |[39m                                      [31m[1m^[22m[39m
+ [90m 13 |[39m [36mimport[39m { [33mShareWinScreen[39m } [36mfrom[39m [32m'../screens/ShareWinScreen'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m { useAuthStore } [36mfrom[39m [32m'../store/useAuthStore'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m { useProfileStore } [36mfrom[39m [32m'../store/useProfileStore'[39m[33m;[39m[0m
+
+Import stack:
+
+ src\navigation\AppNavigator.tsx
+ | import "../screens/DareCompletedScreen"
+
+ App.tsx
+ | import "./src/navigation/AppNavigator"
+
+ node_modules\expo\AppEntry.js
+ | import "../../App"
+
+ 
+ | import "./node_modules/expo/AppEntry"
+
+Web Bundled 2040ms node_modules\expo\AppEntry.js (1 module)
+Web  WARN  "shadow*" style props are deprecated. Use "boxShadow".
+Web  LOG  Running application "main" with appParams:
+ {"hydrate": undefined, "rootTag": "#root"} 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+Web  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+Unable to resolve "expo-clipboard" from "src\screens\DareCompletedScreen.tsx"
+Web  ERROR  [InternalError: Metro has encountered an error: While trying to resolve module `expo-clipboard` from file `D:\Introvert App\Introvert App\src\screens\DareCompletedScreen.tsx`, the package `D:\Introvert App\Introvert App\node_modules\expo-clipboard\package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`D:\Introvert App\Introvert App\node_modules\expo-clipboard\build\Clipboard.js`. Indeed, none of these files exist:
+
+  * D:\Introvert App\Introvert App\node_modules\expo-clipboard\build\Clipboard.js(.web.ts|.ts|.web.tsx|.tsx|.web.mjs|.mjs|.web.js|.js|.web.jsx|.jsx|.web.json|.json|.web.cjs|.cjs|.web.scss|.scss|.web.sass|.sass|.web.css|.css)
+  * D:\Introvert App\Introvert App\node_modules\expo-clipboard\build\Clipboard.js\index(.web.ts|.ts|.web.tsx|.tsx|.web.mjs|.mjs|.web.js|.js|.web.jsx|.jsx|.web.json|.json|.web.cjs|.cjs|.web.scss|.scss|.web.sass|.sass|.web.css|.css): D:\Introvert App\Introvert App\node_modules\metro\src\node-haste\DependencyGraph.js (278:17)
+
+  276 |         }
+  277 |         if (error instanceof _metroResolver.InvalidPackageError) {
+> 278 |           throw new _metroCore.PackageResolutionError({
+      |                 ^
+  279 |             packageError: error,
+  280 |             originModulePath,
+  281 |             targetModuleName: to,]
+Unable to resolve "expo-clipboard" from "src\screens\DareCompletedScreen.tsx"
+Web  ERROR  [InternalError: Metro has encountered an error: While trying to resolve module `expo-clipboard` from file `D:\Introvert App\Introvert App\src\screens\DareCompletedScreen.tsx`, the package `D:\Introvert App\Introvert App\node_modules\expo-clipboard\package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`D:\Introvert App\Introvert App\node_modules\expo-clipboard\build\Clipboard.js`. Indeed, none of these files exist:
+
+  * D:\Introvert App\Introvert App\node_modules\expo-clipboard\build\Clipboard.js(.web.ts|.ts|.web.tsx|.tsx|.web.mjs|.mjs|.web.js|.js|.web.jsx|.jsx|.web.json|.json|.web.cjs|.cjs|.web.scss|.scss|.web.sass|.sass|.web.css|.css)
+  * D:\Introvert App\Introvert App\node_modules\expo-clipboard\build\Clipboard.js\index(.web.ts|.ts|.web.tsx|.tsx|.web.mjs|.mjs|.web.js|.js|.web.jsx|.jsx|.web.json|.json|.web.cjs|.cjs|.web.scss|.scss|.web.sass|.sass|.web.css|.css): D:\Introvert App\Introvert App\node_modules\metro\src\node-haste\DependencyGraph.js (278:17)
+
+  276 |         }
+  277 |         if (error instanceof _metroResolver.InvalidPackageError) {
+> 278 |           throw new _metroCore.PackageResolutionError({
+      |                 ^
+  279 |             packageError: error,
+  280 |             originModulePath,
+  281 |             targetModuleName: to,]
+Web  WARN  Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md
+Web Bundling failed 6714ms node_modules\expo\AppEntry.js (1 module)
+Unable to resolve "expo-clipboard" from "src\screens\DareCompletedScreen.tsx"

@@ -1,0 +1,11 @@
+
+> bravestep@1.0.0 start
+> expo start --web --port 8082
+
+env: load .env
+env: export EXPO_PUBLIC_SUPABASE_ANON_KEY EXPO_PUBLIC_SUPABASE_URL
+Starting project at D:\Introvert App\Introvert App
+Starting Metro Bundler
+
+Waiting on http://localhost:8082
+Logs for your project will appear below.

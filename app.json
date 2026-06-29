@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Introvee",
+    "slug": "introvert-app",
+    "scheme": "bravestep",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "updates": {
+      "enabled": false
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bravestep.app"
+    },
+    "android": {
+      "package": "com.bravestep.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "20453456-f4e9-498f-b567-74d218b88e3f"
+      }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Introvee can use a photo you choose to personalize your shared progress card.",
+          "cameraPermission": "Introvee can use your camera to add an optional photo to your shared progress card."
+        }
+      ]
+    ]
+  }
+}
