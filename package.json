@@ -9,6 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build": "expo export -p web",
+    "import:dares": "node scripts/import-dares-supabase.js",
+    "validate:dares": "node scripts/import-dares-supabase.js --validate-only",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

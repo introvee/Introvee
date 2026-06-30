@@ -11,7 +11,8 @@ create table if not exists public.profiles (
     life_category in (
       'Student',
       'Employee / Worker',
-      'Homemaker'
+      'Homemaker',
+      'Retired'
     )
   ),
   avatar_url text,
@@ -168,7 +169,8 @@ with categories(life_category, max_day) as (
   values
     ('Student', 100),
     ('Employee / Worker', 100),
-    ('Homemaker', 100)
+    ('Homemaker', 100),
+    ('Retired', 100)
 ),
 generated_dares as (
   select
@@ -181,6 +183,7 @@ generated_dares as (
       when 'Student' then 'Ask one classmate a simple course question.'
       when 'Employee / Worker' then 'Say good morning to one coworker or contact.'
       when 'Homemaker' then 'Start a small warm exchange with someone familiar.'
+      when 'Retired' then 'Share a friendly hello with someone in your day.'
       else 'Give one safe, friendly greeting to a familiar person.'
     end as title,
     'Day ' || day || ': take a small social step in your ' || c.life_category || ' context. Keep it brief, respectful, and easy to leave.' as description,

@@ -4,11 +4,11 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { ArrowRight, CheckCircle2, Flame, Heart, Sparkles } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getCompletedDareCount, getLevelDares, getTodaysDareLog } from '../services/dareService';
+import { getCompletedDareCount, getTodaysDareLog } from '../services/dareService';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
 import type { MainTabParamList } from '../navigation/types';
-import type { Dare, UserDareLog } from '../types/dare';
+import type { UserDareLog } from '../types/dare';
 
 type Nav = BottomTabNavigationProp<MainTabParamList>;
 
@@ -67,7 +67,6 @@ export function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
   const profile = useProfileStore((state) => state.profile);
-  const [, setLevelDares] = useState<Dare[]>([]);
   const [todaysLog, setTodaysLog] = useState<UserDareLog | null>(null);
   const [completedDares, setCompletedDares] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,14 +79,12 @@ export function DashboardScreen() {
         if (!user || !profile) return;
         setIsLoading(true);
         try {
-          const [stageData, dayLog, totalCompleted] = await Promise.all([
-            getLevelDares(profile),
+          const [dayLog, totalCompleted] = await Promise.all([
             getTodaysDareLog(user.id),
             getCompletedDareCount(user.id)
           ]);
 
           if (active) {
-            setLevelDares(stageData);
             setTodaysLog(dayLog);
             setCompletedDares(totalCompleted);
           }
@@ -102,7 +99,7 @@ export function DashboardScreen() {
       return () => {
         active = false;
       };
-    }, [user?.id, profile?.current_level, profile?.current_stage, profile?.life_category])
+    }, [user?.id, profile?.current_level, profile?.current_stage])
   );
 
   if (!profile || isLoading) {

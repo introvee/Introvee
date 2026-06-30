@@ -2,10 +2,16 @@
   "expo": {
     "name": "Introvee",
     "slug": "introvert-app",
-    "scheme": "bravestep",
+    "scheme": "introvee",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAF8F3"
+    },
     "updates": {
       "enabled": false
     },
@@ -17,7 +23,14 @@
       "bundleIdentifier": "com.bravestep.app"
     },
     "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FAF8F3"
+      },
       "package": "com.bravestep.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {

@@ -5,6 +5,23 @@ import type { OnboardingInput, Profile } from '../types/profile';
 import { nextProgress, STAGE_BONUS_POINTS } from '../utils/points';
 import { makeId } from './ids';
 
+const DARE_SELECT_COLUMNS = [
+  'id',
+  'level',
+  'stage',
+  'day_number',
+  'life_category',
+  'title',
+  'description',
+  'easier_title',
+  'easier_description',
+  'safety_tip',
+  'difficulty',
+  'points',
+  'mascot_type',
+  'created_at'
+].join(', ');
+
 export type CompleteDareResult = {
   profile: Profile;
   basePoints: number;
@@ -100,9 +117,9 @@ export async function updateProfileProgress(userId: string, updates: Partial<Pro
 }
 
 export async function getTodayDare(profile: Profile) {
-  const match = await findDare(profile.life_category, profile.current_level, profile.current_stage);
+  const match = await findDare(profile.life_category, profile.current_day);
   if (match) return match;
-  return findDare('General Adult', profile.current_level, profile.current_stage);
+  return null;
 }
 
 export async function getLevelDares(profile: Profile) {
@@ -272,13 +289,12 @@ export async function getBadgeCount(userId: string) {
   return count ?? 0;
 }
 
-async function findDare(lifeCategory: string, level: number, stage: number) {
+async function findDare(lifeCategory: string, dayNumber: number) {
   const { data, error } = await supabase
     .from('dares')
-    .select('*')
+    .select(DARE_SELECT_COLUMNS)
     .eq('life_category', lifeCategory)
-    .eq('level', level)
-    .eq('stage', stage)
+    .eq('day_number', dayNumber)
     .maybeSingle();
 
   if (error) throw error;
@@ -288,7 +304,7 @@ async function findDare(lifeCategory: string, level: number, stage: number) {
 async function findDaresForLevel(lifeCategory: string, level: number) {
   const { data, error } = await supabase
     .from('dares')
-    .select('*')
+    .select(DARE_SELECT_COLUMNS)
     .eq('life_category', lifeCategory)
     .eq('level', level)
     .order('stage', { ascending: true });

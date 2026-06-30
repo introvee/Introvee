@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -87,7 +87,7 @@ export function TodayDareScreen() {
       return () => {
         active = false;
       };
-    }, [user?.id, profile?.current_level, profile?.current_stage, profile?.life_category])
+    }, [user?.id, profile?.current_day, profile?.life_category])
   );
 
   function handleStartDare() {
@@ -146,7 +146,7 @@ export function TodayDareScreen() {
                 <Text style={styles.statusText}>Status: {(todaysLog as any) ? ((todaysLog as any).status === 'skipped' ? 'Skipped' : 'Completed') : 'Not completed'}</Text>
               </View>
             </View>
-            <DareHeroCard dare={dare} currentLevel={profile.current_level} currentStage={profile.current_stage} statusText={(todaysLog as any) ? ((todaysLog as any).status === 'skipped' ? 'Skipped' : 'Completed') : 'Not completed'} responsive={responsive} />
+            <DareHeroCard dare={dare} easierMode={easierMode} statusText={(todaysLog as any) ? ((todaysLog as any).status === 'skipped' ? 'Skipped' : 'Completed') : 'Not completed'} responsive={responsive} />
             {message ? <Text style={styles.message}>{message}</Text> : null}
             <MascotActionButtons
               disabled={false}
@@ -165,19 +165,39 @@ export function TodayDareScreen() {
 
 function DareHeroCard({
   dare,
-  currentLevel,
-  currentStage,
+  easierMode,
   statusText,
   responsive
 }: {
   dare: Dare;
-  currentLevel: number;
-  currentStage: number;
+  easierMode: boolean;
   statusText: string;
   responsive: ReturnType<typeof getDareResponsiveStyles>;
 }) {
   const [tipVisible, setTipVisible] = useState(false);
-  const tipText = dare.safety_tip || "Keep it brief, kind, and easy to leave.";
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const rawTipText = easierMode ? dare.easier_description : dare.description;
+  const tipText = rawTipText?.trim() || 'No tip available for this dare yet.';
+  const shakeRotation = shakeAnim.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ['-7deg', '7deg']
+  });
+
+  useEffect(() => {
+    const runShake = () => {
+      shakeAnim.setValue(0);
+      Animated.sequence([
+        Animated.timing(shakeAnim, { toValue: 1, duration: 70, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: -1, duration: 90, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 0.75, duration: 80, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: -0.45, duration: 70, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 0, duration: 90, useNativeDriver: true })
+      ]).start();
+    };
+
+    const interval = setInterval(runShake, 10000);
+    return () => clearInterval(interval);
+  }, [shakeAnim]);
 
   return (
     <View style={[styles.cardStage, responsive.cardStage]}>
@@ -192,6 +212,7 @@ function DareHeroCard({
           <View style={styles.titleArea}>
             <Text style={[styles.heroTitle, responsive.heroTitle]}>{dare.title}</Text>
             <DoodleUnderline width={responsive.underlineWidth} />
+            <Text style={[styles.heroSupport, responsive.heroSupport]}>{dare.description}</Text>
           </View>
           <Pressable 
             style={styles.tipButton}
@@ -199,7 +220,9 @@ function DareHeroCard({
             hitSlop={12}
             accessibilityLabel="Show tip"
           >
-            <Lightbulb size={16} color="#FFFFFF" strokeWidth={2.5} />
+            <Animated.View style={{ transform: [{ translateX: shakeAnim }, { rotate: shakeRotation }] }}>
+              <Lightbulb size={16} color="#FFFFFF" strokeWidth={2.5} />
+            </Animated.View>
           </Pressable>
         </View>
 
@@ -220,8 +243,8 @@ function DareHeroCard({
           <InfoColumn
             icon={<TrendingUp color={theme.cardMuted} size={responsive.infoIconSize + 1} strokeWidth={1.9} />}
             label="Current level"
-            value={`Level ${currentLevel}`}
-            subtext={`Stage ${currentStage}/5`}
+            value={`Level ${dare.level}`}
+            subtext={`Stage ${dare.stage}/5`}
             responsive={responsive}
           />
           <View style={styles.infoSeparator} />
@@ -234,8 +257,9 @@ function DareHeroCard({
           <View style={styles.infoSeparator} />
           <InfoColumn
             icon={<CheckCircle2 color={theme.cardMuted} size={responsive.infoIconSize + 1} strokeWidth={1.9} />}
-            label="Status"
-            value={statusText}
+            label="Points"
+            value={`+${dare.points}`}
+            subtext={statusText}
             responsive={responsive}
           />
         </View>
@@ -1077,7 +1101,9 @@ const styles = StyleSheet.create({
     color: '#555555',
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 28
+    marginBottom: 28,
+    width: '100%',
+    flexShrink: 1
   },
   modalButton: {
     backgroundColor: '#111111',

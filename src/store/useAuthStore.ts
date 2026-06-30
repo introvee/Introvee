@@ -28,7 +28,7 @@ function getOAuthRedirectUri() {
   }
 
   return makeRedirectUri({
-    scheme: 'bravestep',
+    scheme: 'introvee',
     path: 'auth/callback'
   });
 }
@@ -84,8 +84,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   loginWithGoogle: async () => {
     set({ isSigningIn: true });
     try {
+      console.log('Google login button clicked');
       assertSupabaseConfigured();
       const redirectTo = getOAuthRedirectUri();
+      console.log('Generating OAuth URL...', redirectTo);
 
       if (Platform.OS === 'web') {
         const { error } = await supabase.auth.signInWithOAuth({
@@ -104,11 +106,21 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error getting OAuth URL:', error);
+        throw error;
+      }
       if (!data.url) throw new Error('Supabase did not return a Google login URL.');
+      console.log('OAuth URL generated:', data.url);
 
+      console.log('Opening browser...');
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-      if (result.type !== 'success') return;
+      console.log('Browser opened, redirect received:', result);
+      
+      if (result.type !== 'success') {
+        console.log('Browser was cancelled or dismissed');
+        return;
+      }
 
       const callbackUrl = new URL(result.url);
       const code = callbackUrl.searchParams.get('code');
@@ -125,17 +137,31 @@ export const useAuthStore = create<AuthState>((set) => ({
       const params = new URLSearchParams(callbackUrl.hash.replace(/^#/, ''));
       const accessToken = params.get('access_token');
       const refreshToken = params.get('refresh_token');
-      if (!accessToken || !refreshToken) throw new Error('Google login completed without a Supabase session.');
+      if (!accessToken || !refreshToken) {
+        console.error('Google login completed without a Supabase session.', callbackUrl.toString());
+        throw new Error('Google login completed without a Supabase session.');
+      }
+
+      console.log('access_token found:', !!accessToken);
+      console.log('refresh_token found:', !!refreshToken);
 
       const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken
       });
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        console.error('Error saving Supabase session:', sessionError);
+        throw sessionError;
+      }
+
+      console.log('Supabase session saved');
 
       const user = sessionData.session?.user ?? null;
       set({ user });
       if (user) await useProfileStore.getState().loadProfile(user.id);
+    } catch (e) {
+      console.error('Login error:', e);
+      throw e;
     } finally {
       set({ isSigningIn: false });
     }
@@ -146,3 +172,19 @@ export const useAuthStore = create<AuthState>((set) => ({
     useProfileStore.getState().setProfile(null);
   }
 }));
+
+// Setup global auth state listener as requested
+supabase.auth.onAuthStateChange(async (event, session) => {
+  console.log('Auth state changed:', event);
+  if (event === 'SIGNED_IN') {
+    console.log('User signed in');
+    console.log('Navigating to dashboard/home');
+    useAuthStore.setState({ user: session?.user ?? null });
+    if (session?.user) {
+      await useProfileStore.getState().loadProfile(session.user.id);
+    }
+  } else if (event === 'SIGNED_OUT') {
+    useAuthStore.setState({ user: null });
+    useProfileStore.getState().setProfile(null);
+  }
+});
