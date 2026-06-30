@@ -49,7 +49,7 @@ export function JournalScreen() {
             <Text style={styles.date}>{new Date(item.created_at).toLocaleDateString()}</Text>
             <Text style={[styles.status, item.status === 'skipped' ? styles.skipped : styles.completed]}>{item.status}</Text>
           </View>
-          <Text style={styles.itemTitle}>{item.dares?.title ?? 'Introve dare'}</Text>
+          <Text style={styles.itemTitle}>{item.dares?.title ?? 'Introvee dare'}</Text>
           {item.reflection ? <Text style={styles.muted}>{item.reflection}</Text> : null}
           <Text style={styles.points}>+{item.points_earned} points</Text>
         </Card>
