@@ -60,23 +60,35 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const webCode = getWebOAuthCode();
       if (webCode) {
+        console.log('[Bootstrap] Exchanging web OAuth code...');
         const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(webCode);
         if (exchangeError) throw exchangeError;
         clearWebOAuthParams();
 
         const user = sessionData.session?.user ?? null;
         set({ user, isBootstrapping: false });
-        if (user) await useProfileStore.getState().loadProfile(user.id);
+        if (user) {
+          console.log('[Bootstrap] Loading profile for user:', user.id);
+          await useProfileStore.getState().loadProfile(user.id);
+          console.log('[Bootstrap] Profile loaded');
+        }
         return;
       }
 
+      console.log('[Bootstrap] Getting session...');
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
+      console.log('[Bootstrap] Session result:', { hasSession: !!data.session, userId: data.session?.user?.id });
 
       const user = data.session?.user ?? null;
       set({ user, isBootstrapping: false });
-      if (user) await useProfileStore.getState().loadProfile(user.id);
+      if (user) {
+        console.log('[Bootstrap] Loading profile...');
+        await useProfileStore.getState().loadProfile(user.id);
+        console.log('[Bootstrap] Profile loaded:', useProfileStore.getState().profile?.name);
+      }
     } catch (error) {
+      console.warn('[Bootstrap] Error:', error);
       set({ user: null, isBootstrapping: false });
       throw error;
     }

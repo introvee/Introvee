@@ -76,20 +76,37 @@ export function DashboardScreen() {
       let active = true;
 
       async function loadDashboard() {
-        if (!user || !profile) return;
+        if (!user || !profile) {
+          console.log('[Dashboard] No user or profile, skipping load', { user: !!user, profile: !!profile });
+          setIsLoading(false);
+          return;
+        }
+        console.log('[Dashboard] Loading dashboard data for user:', user.id);
         setIsLoading(true);
         try {
-          const [dayLog, totalCompleted] = await Promise.all([
-            getTodaysDareLog(user.id),
-            getCompletedDareCount(user.id)
+          const timeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Dashboard load timed out after 10s')), 10000)
+          );
+          const [dayLog, totalCompleted] = await Promise.race([
+            Promise.all([
+              getTodaysDareLog(user.id),
+              getCompletedDareCount(user.id)
+            ]),
+            timeout.then(() => { throw new Error('timeout'); })
           ]);
 
+          console.log('[Dashboard] Data loaded:', { dayLog: !!dayLog, totalCompleted });
           if (active) {
             setTodaysLog(dayLog);
             setCompletedDares(totalCompleted);
           }
         } catch (error) {
-          Alert.alert('Could not load dashboard', error instanceof Error ? error.message : 'Please try again.');
+          console.warn('[Dashboard] Error loading dashboard:', error);
+          // Don't block the UI — show dashboard with defaults
+          if (active) {
+            setTodaysLog(null);
+            setCompletedDares(0);
+          }
         } finally {
           if (active) setIsLoading(false);
         }
