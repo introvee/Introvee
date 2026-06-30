@@ -58,10 +58,32 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     try {
+      // First, check if we already have a session (restored from storage)
+      console.log('[Bootstrap] Checking for existing session...');
+      const { data: existing, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+
+      if (existing.session) {
+        console.log('[Bootstrap] Found existing session for user:', existing.session.user.id);
+        // Clean up any stale OAuth params in URL
+        clearWebOAuthParams();
+        const user = existing.session.user;
+        set({ user, isBootstrapping: false });
+        console.log('[Bootstrap] Loading profile...');
+        await useProfileStore.getState().loadProfile(user.id);
+        console.log('[Bootstrap] Profile loaded:', useProfileStore.getState().profile?.name);
+        return;
+      }
+
+      // No existing session — try exchanging OAuth code if present
       const webCode = getWebOAuthCode();
       if (webCode) {
         console.log('[Bootstrap] Exchanging web OAuth code...');
-        const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(webCode);
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Code exchange timed out')), 8000)
+        );
+        const exchange = supabase.auth.exchangeCodeForSession(webCode);
+        const { data: sessionData, error: exchangeError } = await Promise.race([exchange, timeout.then(() => { throw new Error('timeout'); })]);
         if (exchangeError) throw exchangeError;
         clearWebOAuthParams();
 
@@ -75,18 +97,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         return;
       }
 
-      console.log('[Bootstrap] Getting session...');
-      const { data, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      console.log('[Bootstrap] Session result:', { hasSession: !!data.session, userId: data.session?.user?.id });
-
-      const user = data.session?.user ?? null;
-      set({ user, isBootstrapping: false });
-      if (user) {
-        console.log('[Bootstrap] Loading profile...');
-        await useProfileStore.getState().loadProfile(user.id);
-        console.log('[Bootstrap] Profile loaded:', useProfileStore.getState().profile?.name);
-      }
+      // No session and no code — user is not logged in
+      console.log('[Bootstrap] No session found');
+      set({ user: null, isBootstrapping: false });
     } catch (error) {
       console.warn('[Bootstrap] Error:', error);
       set({ user: null, isBootstrapping: false });
