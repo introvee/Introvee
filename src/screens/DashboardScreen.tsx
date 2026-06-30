@@ -220,9 +220,11 @@ function StageProgressBar({ completedStages }: { completedStages: number }) {
           const isConnectorFilled = completed === stageCount || index < completed;
 
           return (
-            <View key={stageNumber} style={styles.stageSegment}>
-              <View style={[styles.stageNode, isCompleted && styles.stageNodeCompleted, isActive && styles.stageNodeActive]}>
-                {isActive ? <View style={styles.stageNodeActiveDot} /> : null}
+            <View key={stageNumber} style={[styles.stageStep, index === stageCount - 1 && styles.stageStepLast]}>
+              <View style={styles.stageNodeSlot}>
+                <View style={[styles.stageNode, isCompleted && styles.stageNodeCompleted, isActive && styles.stageNodeActive]}>
+                  {isActive ? <View style={styles.stageNodeActiveDot} /> : null}
+                </View>
               </View>
               {index < stageCount - 1 ? <View style={[styles.stageLine, isConnectorFilled && styles.stageLineCompleted]} /> : null}
             </View>
@@ -568,11 +570,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
-  stageSegment: {
-    flex: 1,
-    minWidth: 20,
+  stageStep: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    flex: 1
+  },
+  stageStepLast: {
+    flex: 0
+  },
+  stageNodeSlot: {
+    width: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   stageNode: {
     width: 10,
@@ -594,8 +604,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: poster.text,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: -3
+    justifyContent: 'center'
   },
   stageNodeActiveDot: {
     width: 6,

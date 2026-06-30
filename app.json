@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Introvee",
+    "name": "Introve",
     "slug": "introvert-app",
     "scheme": "introvee",
     "version": "1.0.0",
@@ -41,8 +41,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Introvee can use a photo you choose to personalize your shared progress card.",
-          "cameraPermission": "Introvee can use your camera to add an optional photo to your shared progress card."
+          "photosPermission": "Introve can use a photo you choose to personalize your shared progress card.",
+          "cameraPermission": "Introve can use your camera to add an optional photo to your shared progress card."
         }
       ]
     ]

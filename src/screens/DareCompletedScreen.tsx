@@ -33,6 +33,7 @@ import type { RootStackParamList } from '../navigation/types';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
 import { awardSharePoints } from '../db/repository';
+import { convertDareToCompletionText } from '../utils/dareText';
 import { downloadScreenAsImage } from '../utils/downloadScreen';
 import { XPAddAnimation } from '../components/XPAddAnimation';
 import { usePointsAnimationStore } from '../store/usePointsAnimationStore';
@@ -74,11 +75,12 @@ export function DareCompletedScreen({ navigation, route }: Props) {
   const responsive = getResponsiveStyles(width, height, insets.top, insets.bottom);
 
   const rawDareText = route.params.easier ? route.params.dare.easier_title : route.params.dare.title;
-  const dareText = useMemo(() => formatPosterDare(rawDareText), [rawDareText]);
+  const dareText = useMemo(() => convertDareToCompletionText(rawDareText), [rawDareText]);
+  const dareTextForShare = useMemo(() => dareText.replace(/[.!?]+$/, ''), [dareText]);
   const completedTime = useMemo(() => formatCompletedTime(route.params.elapsedSeconds), [route.params.elapsedSeconds]);
   const shareText = useMemo(
-    () => `Dare complete: ${dareText}. Done in ${completedTime}. Becoming an extrovert one dare at a time. #DareToGrow ${storyLink}`,
-    [completedTime, dareText]
+    () => `Dare complete: ${dareTextForShare}. Done in ${completedTime}. Becoming an extrovert one dare at a time. #DareToGrow ${storyLink}`,
+    [completedTime, dareTextForShare]
   );
   
   const triggerAnimation = usePointsAnimationStore((state) => state.triggerAnimation);
@@ -465,47 +467,6 @@ function formatCompletedTime(totalSeconds: number) {
 
   const minutes = Math.max(1, Math.round(seconds / 60));
   return `${minutes} ${minutes === 1 ? 'min' : 'mins'}`;
-}
-
-function formatPosterDare(value: string) {
-  const normalized = value.trim().replace(/[.!?]+$/, '');
-  if (!normalized) return 'I completed a brave dare';
-
-  const lower = normalized.charAt(0).toLowerCase() + normalized.slice(1);
-  const replacements: Array<[RegExp, string]> = [
-    [/^say\b/i, 'I said'],
-    [/^ask\b/i, 'I asked'],
-    [/^smile\b/i, 'I smiled'],
-    [/^compliment\b/i, 'I complimented'],
-    [/^talk\b/i, 'I talked'],
-    [/^start\b/i, 'I started'],
-    [/^send\b/i, 'I sent'],
-    [/^message\b/i, 'I messaged'],
-    [/^thank\b/i, 'I thanked'],
-    [/^make\b/i, 'I made'],
-    [/^share\b/i, 'I shared'],
-    [/^introduce\b/i, 'I introduced'],
-    [/^offer\b/i, 'I offered'],
-    [/^give\b/i, 'I gave'],
-    [/^reply\b/i, 'I replied'],
-    [/^greet\b/i, 'I greeted'],
-    [/^call\b/i, 'I called'],
-    [/^join\b/i, 'I joined'],
-    [/^visit\b/i, 'I visited'],
-    [/^write\b/i, 'I wrote'],
-    [/^post\b/i, 'I posted'],
-    [/^record\b/i, 'I recorded'],
-    [/^invite\b/i, 'I invited'],
-    [/^listen\b/i, 'I listened'],
-    [/^hold\b/i, 'I held']
-  ];
-
-  for (const [pattern, replacement] of replacements) {
-    if (pattern.test(lower)) return lower.replace(pattern, replacement);
-  }
-
-  if (/^(i|we)\b/i.test(normalized)) return normalized;
-  return `I ${lower}`;
 }
 
 function getPosterAvatarMetrics(_posterWidth: number, _scale: number) {

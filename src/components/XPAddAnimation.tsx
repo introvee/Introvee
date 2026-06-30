@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Star } from 'lucide-react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { fonts } from '../constants/fonts';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-const lime = '#C9FF35';
+const rewardWhite = '#FFFFFF';
 
 interface XPAddAnimationProps {
   totalEarned: number;
@@ -100,7 +101,7 @@ export function XPAddAnimation({
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke={lime}
+            stroke={rewardWhite}
             strokeWidth={strokeWidth}
             fill="none"
             strokeDasharray={circumference}
@@ -112,8 +113,10 @@ export function XPAddAnimation({
         </Svg>
 
         <View style={styles.scoreOverlay}>
-          <Text style={styles.scoreText}>+{animatedXP}</Text>
-          <Text style={styles.xpText}>XP</Text>
+          <View style={styles.scoreRow}>
+            <Star size={24} color={rewardWhite} fill={rewardWhite} />
+            <Text style={styles.scoreText}>+{animatedXP}</Text>
+          </View>
         </View>
       </View>
     </Animated.View>
@@ -122,13 +125,21 @@ export function XPAddAnimation({
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.55)',
   },
   circleContainer: {
@@ -138,30 +149,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scoreOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  scoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
   scoreText: {
-    fontFamily: fonts.black,
+    fontFamily: fonts.bold,
     fontSize: 42,
-    color: '#FFFFFF',
+    color: rewardWhite,
     textShadowColor: 'rgba(0,0,0,0.4)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
-  },
-  xpText: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: '#E0E0E0',
-    marginTop: -4,
   },
   dot: {
     position: 'absolute',
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: lime,
+    backgroundColor: rewardWhite,
     opacity: 0.8,
   },
   dot1: { top: -10, left: 40 },
@@ -171,4 +186,3 @@ const styles = StyleSheet.create({
   dot5: { bottom: 40, left: -10 },
   dot6: { top: 40, left: -15 },
 });
-

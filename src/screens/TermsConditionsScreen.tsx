@@ -40,7 +40,7 @@ export function TermsConditionsScreen() {
             Welcome to the Introvert App. By using this application, you agree to these Terms & Conditions.
           </Text>
           <Text style={styles.paragraph}>
-            1. You must be at least 13 years old to use this app.
+            1. You must be at least 16 years old to use this app.
           </Text>
           <Text style={styles.paragraph}>
             2. You are responsible for maintaining the confidentiality of your account.

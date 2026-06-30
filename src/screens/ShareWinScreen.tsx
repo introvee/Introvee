@@ -9,6 +9,7 @@ import { Card } from '../components/Card';
 import { colors } from '../constants/colors';
 import { fonts } from '../constants/fonts';
 import type { RootStackParamList } from '../navigation/types';
+import { convertDareToCompletionText } from '../utils/dareText';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShareWin'>;
 
@@ -16,6 +17,7 @@ export function ShareWinScreen({ navigation, route }: Props) {
   const [caption, setCaption] = useState('');
   const insets = useSafeAreaInsets();
   const { dare, pointsEarned } = route.params;
+  const completedDareTitle = convertDareToCompletionText(dare.title);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -26,8 +28,8 @@ export function ShareWinScreen({ navigation, route }: Props) {
       >
         <Text style={styles.title}>Share win</Text>
         <Card style={styles.winCard}>
-          <Text style={styles.cardTitle}>I completed an Introvee dare</Text>
-          <Text style={styles.dare}>{dare.title}</Text>
+          <Text style={styles.cardTitle}>I completed an Introve dare</Text>
+          <Text style={styles.dare}>{completedDareTitle}</Text>
           <Text style={styles.points}>+{pointsEarned} points</Text>
         </Card>
         <Button title="Add Photo" variant="secondary" icon={<Camera color={colors.text} size={20} />} onPress={() => Alert.alert('Photo upload', 'Photo upload is a UI placeholder in this MVP.')} />

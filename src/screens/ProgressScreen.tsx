@@ -122,6 +122,7 @@ export function ProgressScreen() {
   const profile = useProfileStore((s) => s.profile);
   const [badgeCount, setBadgeCount] = useState(0);
   const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
+  const [hasInitializedExpandedLevel, setHasInitializedExpandedLevel] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -130,10 +131,11 @@ export function ProgressScreen() {
 
   // Set default expanded level once profile loads
   useEffect(() => {
-    if (profile && expandedLevel === null) {
+    if (profile && !hasInitializedExpandedLevel) {
       setExpandedLevel(profile.current_level);
+      setHasInitializedExpandedLevel(true);
     }
-  }, [profile, expandedLevel]);
+  }, [profile, hasInitializedExpandedLevel]);
 
   if (!profile) return null;
 

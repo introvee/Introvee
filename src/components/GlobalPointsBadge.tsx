@@ -57,7 +57,6 @@ export function GlobalPointsBadge() {
         <Star size={12} color="#000" fill="#000" />
       </View>
       <Text style={styles.pointsText}>{displayPoints}</Text>
-      <Text style={styles.label}>XP</Text>
     </Animated.View>
   );
 }
@@ -73,13 +72,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     gap: 6,
-    boxShadow: '0px 4px 8px rgba(0, 138, 39, 0.25)',
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.18)',
     elevation: 5,
     borderWidth: 1,
-    borderColor: 'rgba(0, 138, 39, 0.4)'
+    borderColor: 'rgba(255, 255, 255, 0.28)'
   },
   iconContainer: {
-    backgroundColor: '#00FF41',
+    backgroundColor: '#FFFFFF',
     width: 20,
     height: 20,
     borderRadius: 10,
@@ -92,12 +91,5 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     lineHeight: 18,
     letterSpacing: 0.5
-  },
-  label: {
-    color: '#00FF41',
-    fontSize: 12,
-    fontFamily: fonts.bold,
-    lineHeight: 18,
-    opacity: 0.9
   }
 });
