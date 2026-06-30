@@ -19,6 +19,17 @@ type AuthState = {
   logout: () => Promise<void>;
 };
 
+let bootstrapPromise: Promise<void> | null = null;
+
+async function loadProfileSafely(userId: string, source: string) {
+  try {
+    await useProfileStore.getState().loadProfile(userId);
+    console.log(`[${source}] Profile loaded:`, useProfileStore.getState().profile?.name);
+  } catch (error) {
+    console.warn(`[${source}] Profile load failed (non-blocking):`, error);
+  }
+}
+
 function getOAuthRedirectUri() {
   const configuredRedirectUri = process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL?.trim();
   if (configuredRedirectUri) return configuredRedirectUri;
@@ -52,59 +63,65 @@ export const useAuthStore = create<AuthState>((set) => ({
   isBootstrapping: true,
   isSigningIn: false,
   bootstrap: async () => {
-    if (!isSupabaseConfigured) {
-      set({ user: null, isBootstrapping: false });
-      return;
-    }
+    if (bootstrapPromise) return bootstrapPromise;
 
-    try {
-      // First, check if we already have a session (restored from storage)
-      console.log('[Bootstrap] Checking for existing session...');
-      const { data: existing, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) throw sessionError;
-
-      if (existing.session) {
-        console.log('[Bootstrap] Found existing session for user:', existing.session.user.id);
-        // Clean up any stale OAuth params in URL
-        clearWebOAuthParams();
-        const user = existing.session.user;
-        set({ user, isBootstrapping: false });
-        console.log('[Bootstrap] Loading profile...');
-        await useProfileStore.getState().loadProfile(user.id);
-        console.log('[Bootstrap] Profile loaded:', useProfileStore.getState().profile?.name);
+    bootstrapPromise = (async () => {
+      if (!isSupabaseConfigured) {
+        set({ user: null, isBootstrapping: false });
         return;
       }
 
-      // No existing session — try exchanging OAuth code if present
-      const webCode = getWebOAuthCode();
-      if (webCode) {
-        console.log('[Bootstrap] Exchanging web OAuth code...');
-        const timeout = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Code exchange timed out')), 8000)
-        );
-        const exchange = supabase.auth.exchangeCodeForSession(webCode);
-        const { data: sessionData, error: exchangeError } = await Promise.race([exchange, timeout.then(() => { throw new Error('timeout'); })]);
-        if (exchangeError) throw exchangeError;
-        clearWebOAuthParams();
+      try {
+        // First, check if we already have a session (restored from storage)
+        console.log('[Bootstrap] Checking for existing session...');
+        const { data: existing, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
 
-        const user = sessionData.session?.user ?? null;
-        set({ user, isBootstrapping: false });
-        if (user) {
-          console.log('[Bootstrap] Loading profile for user:', user.id);
-          await useProfileStore.getState().loadProfile(user.id);
-          console.log('[Bootstrap] Profile loaded');
+        if (existing.session) {
+          console.log('[Bootstrap] Found existing session for user:', existing.session.user.id);
+          // Clean up any stale OAuth params in URL
+          clearWebOAuthParams();
+          const user = existing.session.user;
+          set({ user, isBootstrapping: false });
+          console.log('[Bootstrap] Loading profile...');
+          await loadProfileSafely(user.id, 'Bootstrap');
+          return;
         }
-        return;
-      }
 
-      // No session and no code — user is not logged in
-      console.log('[Bootstrap] No session found');
-      set({ user: null, isBootstrapping: false });
-    } catch (error) {
-      console.warn('[Bootstrap] Error:', error);
-      set({ user: null, isBootstrapping: false });
-      throw error;
-    }
+        // No existing session — try exchanging OAuth code if present
+        const webCode = getWebOAuthCode();
+        if (webCode) {
+          console.log('[Bootstrap] Exchanging web OAuth code...');
+          const timeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Code exchange timed out')), 8000)
+          );
+          const exchange = supabase.auth.exchangeCodeForSession(webCode);
+          const { data: sessionData, error: exchangeError } = await Promise.race([exchange, timeout.then(() => { throw new Error('timeout'); })]);
+          if (exchangeError) throw exchangeError;
+          clearWebOAuthParams();
+
+          const user = sessionData.session?.user ?? null;
+          set({ user, isBootstrapping: false });
+          if (user) {
+            console.log('[Bootstrap] Loading profile for user:', user.id);
+            await loadProfileSafely(user.id, 'Bootstrap');
+          }
+          return;
+        }
+
+        // No session and no code — user is not logged in
+        console.log('[Bootstrap] No session found');
+        set({ user: null, isBootstrapping: false });
+      } catch (error) {
+        console.warn('[Bootstrap] Error:', error);
+        set({ isBootstrapping: false });
+        throw error;
+      } finally {
+        bootstrapPromise = null;
+      }
+    })();
+
+    return bootstrapPromise;
   },
   loginWithGoogle: async () => {
     set({ isSigningIn: true });
@@ -154,8 +171,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) throw exchangeError;
         const user = sessionData.session?.user ?? null;
-        set({ user });
-        if (user) await useProfileStore.getState().loadProfile(user.id);
+        set({ user, isBootstrapping: false });
+        if (user) await loadProfileSafely(user.id, 'Login');
         return;
       }
 
@@ -182,8 +199,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       console.log('Supabase session saved');
 
       const user = sessionData.session?.user ?? null;
-      set({ user });
-      if (user) await useProfileStore.getState().loadProfile(user.id);
+      set({ user, isBootstrapping: false });
+      if (user) await loadProfileSafely(user.id, 'Login');
     } catch (e) {
       console.error('Login error:', e);
       throw e;
@@ -193,23 +210,28 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   logout: async () => {
     await supabase.auth.signOut();
-    set({ user: null });
+    set({ user: null, isBootstrapping: false });
     useProfileStore.getState().setProfile(null);
   }
 }));
 
-// Setup global auth state listener as requested
-supabase.auth.onAuthStateChange(async (event, session) => {
-  console.log('Auth state changed:', event);
-  if (event === 'SIGNED_IN') {
-    console.log('User signed in');
-    console.log('Navigating to dashboard/home');
-    useAuthStore.setState({ user: session?.user ?? null });
-    if (session?.user) {
-      await useProfileStore.getState().loadProfile(session.user.id);
+if (isSupabaseConfigured) {
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log('[Auth] State changed:', event);
+
+    try {
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('[Auth] User signed in:', session.user.id);
+        useAuthStore.setState({ user: session.user, isBootstrapping: false });
+        await loadProfileSafely(session.user.id, 'Auth');
+      } else if (event === 'SIGNED_OUT') {
+        console.log('[Auth] User signed out');
+        useAuthStore.setState({ user: null, isBootstrapping: false });
+        useProfileStore.getState().setProfile(null);
+      }
+    } catch (error) {
+      console.warn('[Auth] State change handler failed:', error);
+      useAuthStore.setState({ isBootstrapping: false });
     }
-  } else if (event === 'SIGNED_OUT') {
-    useAuthStore.setState({ user: null });
-    useProfileStore.getState().setProfile(null);
-  }
-});
+  });
+}

@@ -1,7 +1,7 @@
 import { CircleDot, House, Map, UserRound } from 'lucide-react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import type { ReactNode } from 'react';
 import { AuthNavigator } from './AuthNavigator';
 import { DashboardScreen } from '../screens/DashboardScreen';
@@ -16,6 +16,7 @@ import { HelpSupportScreen } from '../screens/HelpSupportScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { TermsConditionsScreen } from '../screens/TermsConditionsScreen';
 import { AboutScreen } from '../screens/AboutScreen';
+import { colors } from '../constants/colors';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
 import type { MainTabParamList, RootStackParamList, ProfileStackParamList } from './types';
@@ -104,6 +105,15 @@ function TabIcon({ focused, children }: { focused: boolean; children: ReactNode 
 export function RootNavigator() {
   const user = useAuthStore((state) => state.user);
   const profile = useProfileStore((state) => state.profile);
+  const isLoadingProfile = useProfileStore((state) => state.isLoadingProfile);
+
+  if (user && isLoadingProfile && !profile) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
@@ -158,5 +168,11 @@ const styles = StyleSheet.create({
   },
   activeIconWrap: {
     backgroundColor: '#111111'
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background
   }
 });

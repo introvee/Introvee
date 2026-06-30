@@ -119,7 +119,7 @@ export function DashboardScreen() {
     }, [user?.id, profile?.current_level, profile?.current_stage])
   );
 
-  if (!profile || isLoading) {
+  if (isLoading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={poster.accent} />
@@ -127,8 +127,8 @@ export function DashboardScreen() {
     );
   }
 
-  const currentLevel = clamp(profile.current_level, 1, 20);
-  const stageInLevel = clamp(profile.current_stage, 1, 5);
+  const currentLevel = clamp(profile?.current_level ?? 1, 1, 20);
+  const stageInLevel = clamp(profile?.current_stage ?? 1, 1, 5);
   const completedStagesInLevel = getCompletedStagesInLevel(stageInLevel, currentLevel, completedDares, todaysLog);
   const confidence = Math.min(Math.max(Math.round((completedDares / 100) * 100), 0), 100);
   const responsive = getDashboardResponsiveStyles(width, height, insets.bottom);
@@ -143,7 +143,7 @@ export function DashboardScreen() {
             </Text>
             <View style={styles.greetingNameRow}>
               <Text style={[styles.greetingName, responsive.greetingName]} numberOfLines={1} adjustsFontSizeToFit>
-                {profile.name || 'Friend'}
+                {profile?.name || 'Friend'}
               </Text>
             </View>
             <Text style={styles.subtitle}>You're doing great. One step at a time.</Text>
@@ -168,7 +168,7 @@ export function DashboardScreen() {
 
         <View style={[styles.combinedStatsCard, responsive.combinedStatsCard]}>
           {[
-            { label: 'Streak', value: profile.streak_count, icon: <Flame size={16} color="rgba(255,255,255,0.7)" strokeWidth={1.8} /> },
+            { label: 'Streak', value: profile?.streak_count ?? 0, icon: <Flame size={16} color="rgba(255,255,255,0.7)" strokeWidth={1.8} /> },
             { label: 'Dares', value: completedDares, icon: <CheckCircle2 size={16} color="rgba(255,255,255,0.7)" strokeWidth={1.8} /> },
             { label: 'Confidence', value: `${confidence}%`, icon: <Heart size={16} color="rgba(255,255,255,0.7)" strokeWidth={1.8} /> }
           ].map((stat, i, arr) => (

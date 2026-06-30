@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { getProfile, saveOnboardingProfile, updateProfileDetails } from '../services/profileService';
 import type { OnboardingInput, Profile } from '../types/profile';
 
+const profileLoadTimeoutMs = 10000;
+
 type ProfileState = {
   profile: Profile | null;
   isLoadingProfile: boolean;
@@ -18,7 +20,10 @@ export const useProfileStore = create<ProfileState>((set) => ({
   loadProfile: async (userId) => {
     set({ isLoadingProfile: true });
     try {
-      const profile = await getProfile(userId);
+      const timeout = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Profile load timed out')), profileLoadTimeoutMs);
+      });
+      const profile = await Promise.race([getProfile(userId), timeout]);
       set({ profile });
       return profile;
     } finally {
