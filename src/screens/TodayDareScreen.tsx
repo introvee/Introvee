@@ -31,6 +31,7 @@ import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Stop } from 'react-na
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { copy } from '../constants/copy';
 import { fonts } from '../constants/fonts';
+import { getTabBarReservedHeight } from '../constants/layout';
 import { getTodayDare, getTodaysDareLog } from '../services/dareService';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
@@ -498,7 +499,16 @@ function CompletedTodayScreen({ onGoHome, onBack }: { onGoHome: () => void; onBa
         <ArrowLeft size={24} color="#2A1715" strokeWidth={1.9} />
       </Pressable>
 
-      <View style={[completedStyles.content, compact && completedStyles.contentCompact, veryCompact && completedStyles.contentVeryCompact]}>
+      <ScrollView
+        style={completedStyles.scroll}
+        contentContainerStyle={[
+          completedStyles.content,
+          compact && completedStyles.contentCompact,
+          veryCompact && completedStyles.contentVeryCompact,
+          { paddingBottom: insets.bottom + (veryCompact ? 24 : 40) }
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Mascot */}
         <Image
           source={require('../../assets/images/i-will-do-it-button.png')}
@@ -522,7 +532,7 @@ function CompletedTodayScreen({ onGoHome, onBack }: { onGoHome: () => void; onBa
         </Text>
 
 
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -581,7 +591,7 @@ function getDareResponsiveStyles(width: number, height: number, bottomInset: num
     content: {
       paddingHorizontal: horizontalPadding,
       paddingTop: clamp(height * 0.006, 4, 10),
-      paddingBottom: 86 + bottomInset,
+      paddingBottom: getTabBarReservedHeight(bottomInset),
       minHeight: height
     },
     sectionHeader: {
@@ -697,8 +707,10 @@ const theme = {
 const completedStyles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#FAF8F3',
-    overflow: 'hidden'
+    backgroundColor: '#FAF8F3'
+  },
+  scroll: {
+    flex: 1
   },
   backArrow: {
     position: 'absolute',
@@ -707,8 +719,9 @@ const completedStyles = StyleSheet.create({
     justifyContent: 'center'
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 24,
     paddingBottom: 52
   },
@@ -720,11 +733,9 @@ const completedStyles = StyleSheet.create({
   },
   mascot: {
     alignSelf: 'center',
-    marginTop: 120,
     marginBottom: 75
   },
   mascotCompact: {
-    marginTop: 70,
     marginBottom: 52
   },
   title: {

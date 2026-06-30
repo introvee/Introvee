@@ -22,6 +22,7 @@ import {
 } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fonts } from '../constants/fonts';
+import { getTabBarReservedHeight } from '../constants/layout';
 import { getBadgeCount } from '../services/progressService';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
@@ -245,7 +246,7 @@ export function ProgressScreen() {
       </View>
 
       {/* ── Scrollable Path Container (Accordion) ──────────────── */}
-      <View style={[s.pathContainerWrapper, { marginHorizontal: hPad, paddingBottom: insets.bottom + 100 }]}>
+      <View style={[s.pathContainerWrapper, { marginHorizontal: hPad, paddingBottom: getTabBarReservedHeight(insets.bottom) }]}>
         <View style={s.pathContainer}>
           <SectionList
             sections={sections}

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform, Linking
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronRight, ChevronDown, Shield, Mail, HelpCircle } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import { getTabBarReservedHeight } from '../constants/layout';
 
 const displayFont = Platform.select({
   ios: 'SF Pro Display',
@@ -71,7 +72,7 @@ export function HelpSupportScreen() {
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: getTabBarReservedHeight(insets.bottom) }]} showsVerticalScrollIndicator={false}>
         {/* Intro Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>

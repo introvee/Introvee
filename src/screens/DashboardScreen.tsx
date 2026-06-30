@@ -5,6 +5,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { ArrowRight, CheckCircle2, Flame, Heart, Sparkles } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getCompletedDareCount, getTodaysDareLog } from '../services/dareService';
+import { getTabBarReservedHeight } from '../constants/layout';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
 import type { MainTabParamList } from '../navigation/types';
@@ -135,8 +136,11 @@ export function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={[styles.container, responsive.container]}>
-        <View style={[styles.content, responsive.content]}>
+      <ScrollView
+        style={[styles.container, responsive.container]}
+        contentContainerStyle={[styles.content, responsive.content]}
+        showsVerticalScrollIndicator={false}
+      >
           <View style={[styles.greetingBlock, responsive.greetingBlock]}>
             <Text style={[styles.greetingTime, responsive.greetingTime]} numberOfLines={1} adjustsFontSizeToFit>
               Good morning,
@@ -192,8 +196,7 @@ export function DashboardScreen() {
             </View>
           </View>
         </View>
-        </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -359,15 +362,14 @@ function getDashboardResponsiveStyles(width: number, height: number, bottomInset
 
   return {
     container: {
-      flex: 1,
-      overflow: 'hidden' as const
+      flex: 1
     },
     content: {
-      flex: 1,
+      flexGrow: 1,
       justifyContent: 'space-between' as const,
       paddingHorizontal: horizontalPadding,
       paddingTop: clamp(height * 0.02, 14, 22),
-      paddingBottom: 84 + bottomInset
+      paddingBottom: getTabBarReservedHeight(bottomInset)
     },
     topRow: { marginBottom: greetingBottom },
     greetingBlock: { marginBottom: greetingBottom },
@@ -469,8 +471,8 @@ const displayFont = Platform.select({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: poster.background },
-  container: { flex: 1, backgroundColor: poster.background, overflow: 'hidden' as const },
-  content: { flex: 1, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 108, justifyContent: 'space-between' as const },
+  container: { flex: 1, backgroundColor: poster.background },
+  content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 108, justifyContent: 'space-between' as const },
   center: { flex: 1, backgroundColor: poster.background, alignItems: 'center', justifyContent: 'center' },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 26 },
   iconButton: {

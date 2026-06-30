@@ -1,5 +1,5 @@
-import { Alert, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ArrowLeft } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -37,15 +37,16 @@ function GoogleLogo() {
 export function LoginScreen({ navigation }: Props) {
   const { loginWithGoogle, isSigningIn } = useAuthStore();
   const { height, width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const compact = height < 720;
   const veryCompact = height < 640;
-  const mascotWidth = veryCompact ? 118 : compact ? 136 : Math.min(155, Math.max(146, width * 0.37));
+  const mascotWidth = Math.min(veryCompact ? 112 : compact ? 132 : 155, Math.max(104, width * 0.37));
   const mascotHeight = Math.round(mascotWidth * (2031 / 1219));
-  const contentTop = veryCompact ? 76 : compact ? 110 : Math.min(135, Math.max(118, height * 0.158));
-  const headingGap = veryCompact ? 24 : compact ? 28 : 34;
-  const mascotGap = veryCompact ? 34 : compact ? 42 : 58;
-  const buttonGap = veryCompact ? 34 : compact ? 48 : 62;
-  const termsGap = veryCompact ? 20 : compact ? 24 : 30;
+  const contentTop = veryCompact ? 54 : compact ? 76 : Math.min(110, Math.max(86, height * 0.12));
+  const headingGap = veryCompact ? 16 : compact ? 22 : 30;
+  const mascotGap = veryCompact ? 20 : compact ? 32 : 50;
+  const buttonGap = veryCompact ? 22 : compact ? 36 : 56;
+  const termsGap = veryCompact ? 14 : compact ? 20 : 28;
 
   function handleBack() {
     if (navigation.canGoBack()) {
@@ -71,54 +72,67 @@ export function LoginScreen({ navigation }: Props) {
         accessibilityRole="button"
         onPress={handleBack}
         hitSlop={12}
-        style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.backButton, { top: insets.top + 12 }, pressed && styles.pressed]}
       >
         <ArrowLeft color="#080808" size={28} strokeWidth={2.45} />
       </Pressable>
 
-      <View style={[styles.content, { paddingTop: contentTop }, veryCompact && styles.contentVeryCompact]}>
-        <View style={styles.copyGroup}>
-          <Text style={[styles.title, compact && styles.titleCompact]}>
-            Welcome back,{'\n'}
-            <Text style={styles.greenWord}>Brave</Text> one.
-          </Text>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingTop: contentTop,
+            paddingBottom: insets.bottom + (veryCompact ? 18 : 28)
+          }
+        ]}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <View style={styles.contentInner}>
+          <View style={styles.copyGroup}>
+            <Text style={[styles.title, compact && styles.titleCompact]}>
+              Welcome back,{'\n'}
+              <Text style={styles.greenWord}>Brave</Text> one.
+            </Text>
 
-          <Text style={[styles.subtitle, { marginTop: headingGap }, compact && styles.subtitleCompact]}>
-            Your safe space for small{'\n'}
-            steps forward.
-          </Text>
+            <Text style={[styles.subtitle, { marginTop: headingGap }, compact && styles.subtitleCompact]}>
+              Your safe space for small{'\n'}
+              steps forward.
+            </Text>
+          </View>
+
+          <Image
+            source={mascotImage}
+            style={[styles.mascot, { width: mascotWidth, height: mascotHeight, marginTop: mascotGap, marginBottom: buttonGap }]}
+            resizeMode="contain"
+          />
+
+          <View style={styles.actionGroup}>
+            <Pressable
+              accessibilityLabel="Sign in with Google"
+              accessibilityRole="button"
+              onPress={handleLogin}
+              disabled={isSigningIn}
+              style={({ pressed }) => [styles.googleButton, isSigningIn && styles.disabled, pressed && !isSigningIn && styles.buttonPressed]}
+            >
+              <View style={styles.googleBadge}>
+                <GoogleLogo />
+              </View>
+              <View style={styles.googleTextWrap}>
+                <Text style={styles.googleText} numberOfLines={1}>
+                  Sign in with Google
+                </Text>
+              </View>
+            </Pressable>
+
+            <Text style={[styles.terms, { marginTop: termsGap }]}>
+              By continuing, you agree to our{'\n'}
+              <Text style={styles.termsStrong}>Terms & Privacy Policy</Text>
+            </Text>
+          </View>
         </View>
-
-        <Image
-          source={mascotImage}
-          style={[styles.mascot, { width: mascotWidth, height: mascotHeight, marginTop: mascotGap, marginBottom: buttonGap }]}
-          resizeMode="contain"
-        />
-
-        <View style={styles.actionGroup}>
-          <Pressable
-            accessibilityLabel="Sign in with Google"
-            accessibilityRole="button"
-            onPress={handleLogin}
-            disabled={isSigningIn}
-            style={({ pressed }) => [styles.googleButton, isSigningIn && styles.disabled, pressed && !isSigningIn && styles.buttonPressed]}
-          >
-            <View style={styles.googleBadge}>
-              <GoogleLogo />
-            </View>
-            <View style={styles.googleTextWrap}>
-              <Text style={styles.googleText} numberOfLines={1}>
-                Sign in with Google
-              </Text>
-            </View>
-          </Pressable>
-
-          <Text style={[styles.terms, { marginTop: termsGap }]}>
-            By continuing, you agree to our{'\n'}
-            <Text style={styles.termsStrong}>Terms &amp; Privacy Policy</Text>
-          </Text>
-        </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -126,12 +140,10 @@ export function LoginScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#FAF8F3',
-    overflow: 'hidden'
+    backgroundColor: '#FAF8F3'
   },
   backButton: {
     position: 'absolute',
-    top: 28,
     left: 28,
     zIndex: 2,
     width: 32,
@@ -142,15 +154,20 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.65
   },
+  scroll: {
+    flex: 1
+  },
   content: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24
+  },
+  contentInner: {
+    width: '100%',
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingHorizontal: 24,
-    paddingBottom: 38
-  },
-  contentVeryCompact: {
-    paddingBottom: 14
+    minHeight: 0
   },
   copyGroup: {
     alignItems: 'center'

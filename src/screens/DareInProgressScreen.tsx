@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,7 +35,7 @@ export function DareInProgressScreen({ navigation, route }: Props) {
   const [motivationIndex, setMotivationIndex] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
-  const responsive = getProgressResponsiveStyles(width, height, insets.bottom);
+  const responsive = getProgressResponsiveStyles(width, height, insets.top, insets.bottom);
 
   useEffect(() => {
     const stopwatch = setInterval(() => {
@@ -113,7 +113,11 @@ export function DareInProgressScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={[styles.page, responsive.page]}>
+      <ScrollView
+        style={styles.scroller}
+        contentContainerStyle={[styles.page, responsive.page]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.topBar}>
           <Pressable
             accessibilityRole="button"
@@ -147,7 +151,7 @@ export function DareInProgressScreen({ navigation, route }: Props) {
           {isCompleting ? <ActivityIndicator color="#FFFFFF" size="small" /> : null}
           <Text style={styles.doneText}>{isCompleting ? 'Finishing...' : 'I did it'}</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -162,7 +166,7 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-function getProgressResponsiveStyles(width: number, height: number, bottomInset: number) {
+function getProgressResponsiveStyles(width: number, height: number, topInset: number, bottomInset: number) {
   const shortScreen = height <= 720;
   const veryShortScreen = height <= 640;
   const pageWidth = Math.min(width, 430);
@@ -174,6 +178,7 @@ function getProgressResponsiveStyles(width: number, height: number, bottomInset:
       width: '100%' as const,
       maxWidth: pageWidth,
       alignSelf: 'center' as const,
+      minHeight: Math.max(0, height - topInset - bottomInset),
       paddingHorizontal: horizontalPadding,
       paddingTop: clamp(height * 0.004, 4, 8),
       paddingBottom: Math.max(bottomInset, 16)
@@ -221,6 +226,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.background
   },
   page: {
+    flexGrow: 1,
+    backgroundColor: theme.background
+  },
+  scroller: {
     flex: 1,
     backgroundColor: theme.background
   },

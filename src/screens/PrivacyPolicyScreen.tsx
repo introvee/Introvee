@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Shield, User, Database, Trash2, Mail, Info, Eye, Image as ImageIcon, Heart } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import { getTabBarReservedHeight } from '../constants/layout';
 
 const displayFont = Platform.select({
   ios: 'SF Pro Display',
@@ -48,7 +49,7 @@ export function PrivacyPolicyScreen() {
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: getTabBarReservedHeight(insets.bottom) }]} showsVerticalScrollIndicator={false}>
         <View style={styles.topInfo}>
           <Text style={styles.lastUpdated}>Last updated: June 29, 2026</Text>
           <Text style={styles.introText}>

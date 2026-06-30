@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../constants/colors';
 import { fonts } from '../constants/fonts';
+import { getTabBarReservedHeight } from '../constants/layout';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
 import type { Profile } from '../types/profile';
@@ -194,7 +195,7 @@ export function ProfileScreen() {
         <Text style={styles.headerTitle}>Profile</Text>
       </View>
 
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: getTabBarReservedHeight(insets.bottom) }]} showsVerticalScrollIndicator={false}>
         <View style={styles.profileSection}>
           <TouchableOpacity style={styles.avatarWrapper} onPress={() => setEditModalVisible(true)}>
             {profile.avatar_url ? (

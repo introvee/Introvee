@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import type { ReactNode } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthNavigator } from './AuthNavigator';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { TodayDareScreen } from '../screens/TodayDareScreen';
@@ -17,6 +18,7 @@ import { SettingsScreen } from '../screens/SettingsScreen';
 import { TermsConditionsScreen } from '../screens/TermsConditionsScreen';
 import { AboutScreen } from '../screens/AboutScreen';
 import { colors } from '../constants/colors';
+import { getTabBarBottomOffset, TAB_BAR_BASE_HEIGHT } from '../constants/layout';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
 import type { MainTabParamList, RootStackParamList, ProfileStackParamList } from './types';
@@ -39,6 +41,9 @@ function ProfileStackScreen() {
 }
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
+  const bottomOffset = getTabBarBottomOffset(insets.bottom);
+
   return (
     <Tabs.Navigator
       screenOptions={{
@@ -46,7 +51,7 @@ function MainTabs() {
         tabBarShowLabel: false,
         tabBarActiveTintColor: '#FFFFFF',
         tabBarInactiveTintColor: '#8A8A8A',
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [styles.tabBar, { bottom: bottomOffset }],
         tabBarItemStyle: styles.tabItem
       }}
     >
@@ -138,8 +143,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '9%',
     right: '9%',
-    bottom: 18,
-    height: 56,
+    height: TAB_BAR_BASE_HEIGHT,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
     borderTopWidth: 0,

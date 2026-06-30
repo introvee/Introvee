@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Image }
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
-import { colors } from '../constants/colors';
+import { getTabBarReservedHeight } from '../constants/layout';
 
 const displayFont = Platform.select({
   ios: 'SF Pro Display',
@@ -35,7 +35,7 @@ export function AboutScreen() {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: getTabBarReservedHeight(insets.bottom) }]} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <View style={styles.logoContainer}>
             <View style={styles.logoPlaceholder}>

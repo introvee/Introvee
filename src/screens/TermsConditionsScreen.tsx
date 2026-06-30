@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
-import { colors } from '../constants/colors';
+import { getTabBarReservedHeight } from '../constants/layout';
 
 const displayFont = Platform.select({
   ios: 'SF Pro Display',
@@ -34,7 +34,7 @@ export function TermsConditionsScreen() {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: getTabBarReservedHeight(insets.bottom) }]} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.paragraph}>
             Welcome to the Introvert App. By using this application, you agree to these Terms & Conditions.
