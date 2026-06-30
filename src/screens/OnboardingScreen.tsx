@@ -109,7 +109,7 @@ export function OnboardingScreen() {
   async function submit() {
     if (!user) return;
     if (!name.trim()) {
-      Alert.alert('Name needed', 'Add the name you want Introve to use.');
+      Alert.alert('Name needed', 'Add the name you want Introvee to use.');
       return;
     }
     if (!dob) {

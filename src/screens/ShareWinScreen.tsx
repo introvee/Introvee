@@ -28,7 +28,7 @@ export function ShareWinScreen({ navigation, route }: Props) {
       >
         <Text style={styles.title}>Share win</Text>
         <Card style={styles.winCard}>
-          <Text style={styles.cardTitle}>I completed an Introve dare</Text>
+          <Text style={styles.cardTitle}>I completed an Introvee dare</Text>
           <Text style={styles.dare}>{completedDareTitle}</Text>
           <Text style={styles.points}>+{pointsEarned} points</Text>
         </Card>

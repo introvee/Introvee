@@ -129,7 +129,7 @@ export function TodayDareScreen() {
             <ArrowLeft color={theme.text} size={responsive.navIconSize} strokeWidth={2.45} />
           </Pressable>
           <View style={styles.brandBlock}>
-            <Text style={[styles.brandTitle, responsive.brandTitle]}>Introve</Text>
+            <Text style={[styles.brandTitle, responsive.brandTitle]}>Introvee</Text>
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Save dare" hitSlop={10} style={styles.iconButton}>
             <Heart color={theme.text} size={responsive.navIconSize} strokeWidth={2.25} />

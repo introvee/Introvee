@@ -23,6 +23,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fonts } from '../constants/fonts';
 import { getTabBarReservedHeight } from '../constants/layout';
+import { getLevelTitle } from '../constants/levelTitles';
 import { getBadgeCount } from '../services/progressService';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
@@ -38,30 +39,6 @@ const C = {
   shadow: '#000000',
   border: '#E8E8E8',
 };
-
-// ── Data generation for 100 days ──────────────────────────────────────────────
-const LEVEL_TITLES = [
-  'Tiny Starts',
-  'Growing Braver',
-  'Soft Confidence',
-  'Small Talk Mode',
-  'Comfort Breaker',
-  'Voice Unlocked',
-  'Social Warm-Up',
-  'Brave Interactions',
-  'Showing Up',
-  'Conversation Builder',
-  'Fear Less',
-  'Friendly Energy',
-  'Open Circle',
-  'Confident Moves',
-  'People Ready',
-  'Social Spark',
-  'Bold Presence',
-  'Extrovert Mode',
-  'Fully Showing Up',
-  'Brave New You'
-];
 
 const sampleTitles: Record<number, string> = {
   1: 'Start a chat',
@@ -153,7 +130,7 @@ export function ProgressScreen() {
     { icon: <Flame size={16} color="rgba(255,255,255,0.7)" strokeWidth={1.8} />, value: profile.streak_count, label: 'Streak' },
   ];
 
-  const sections = LEVEL_TITLES.map((title, levelIndex) => {
+  const sections = Array.from({ length: 20 }).map((_, levelIndex) => {
     const levelNumber = levelIndex + 1;
     const isLevelCompleted = profile.current_level > levelNumber;
     const isLevelCurrent = profile.current_level === levelNumber;
@@ -188,7 +165,7 @@ export function ProgressScreen() {
 
     return {
       levelNumber,
-      title: `Level ${levelNumber} · ${title}`,
+      title: getLevelTitle(levelNumber),
       isCompleted: isLevelCompleted,
       isCurrent: isLevelCurrent,
       isExpanded,
@@ -266,7 +243,17 @@ export function ProgressScreen() {
                 onPress={() => handleToggleLevel(section.levelNumber)}
               >
                 <View style={s.levelHeaderLeft}>
-                  <Text style={[s.levelTitle, !section.isCompleted && !section.isCurrent && s.levelTitleMuted]}>
+                  <Text
+                    style={[s.levelNumber, !section.isCompleted && !section.isCurrent && s.levelTitleMuted]}
+                    numberOfLines={1}
+                  >
+                    Level {section.levelNumber}
+                  </Text>
+                  <Text
+                    style={[s.levelTitle, !section.isCompleted && !section.isCurrent && s.levelTitleMuted]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
                     {section.title}
                   </Text>
                   
@@ -439,11 +426,19 @@ const s = StyleSheet.create({
   levelHeaderLeft: {
     flex: 1,
     gap: 4,
+    minWidth: 0,
   },
   levelHeaderRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexShrink: 0,
+  },
+  levelNumber: {
+    color: C.sub,
+    fontSize: 11,
+    lineHeight: 14,
+    fontFamily: fonts.regular,
   },
   levelTitle: {
     color: C.text,

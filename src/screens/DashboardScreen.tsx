@@ -6,35 +6,13 @@ import { ArrowRight, CheckCircle2, Flame, Heart, Sparkles } from 'lucide-react-n
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getCompletedDareCount, getTodaysDareLog } from '../services/dareService';
 import { getTabBarReservedHeight } from '../constants/layout';
+import { getLevelTitle } from '../constants/levelTitles';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
 import type { MainTabParamList } from '../navigation/types';
 import type { UserDareLog } from '../types/dare';
 
 type Nav = BottomTabNavigationProp<MainTabParamList>;
-
-const levelTitles: Record<number, string> = {
-  1: 'Tiny Starts',
-  2: 'Growing Braver',
-  3: 'Soft Confidence',
-  4: 'Small Talk Mode',
-  5: 'Comfort Breaker',
-  6: 'Voice Unlocked',
-  7: 'Social Warm-Up',
-  8: 'Brave Interactions',
-  9: 'Showing Up',
-  10: 'Conversation Builder',
-  11: 'Fear Less',
-  12: 'Friendly Energy',
-  13: 'Open Circle',
-  14: 'Confident Moves',
-  15: 'People Ready',
-  16: 'Social Spark',
-  17: 'Bold Presence',
-  18: 'Extrovert Mode',
-  19: 'Fully Showing Up',
-  20: 'Brave New You'
-};
 
 const levelCovers: Record<number, number> = {
   1: require('../../assets/images/level-1-cover.png'),
@@ -131,6 +109,8 @@ export function DashboardScreen() {
   const currentLevel = clamp(profile?.current_level ?? 1, 1, 20);
   const stageInLevel = clamp(profile?.current_stage ?? 1, 1, 5);
   const completedStagesInLevel = getCompletedStagesInLevel(stageInLevel, currentLevel, completedDares, todaysLog);
+  const totalCompletedStages = clamp(completedDares, 0, 100);
+  const currentDay = Math.min(totalCompletedStages + 1, 100);
   const confidence = Math.min(Math.max(Math.round((completedDares / 100) * 100), 0), 100);
   const responsive = getDashboardResponsiveStyles(width, height, insets.bottom);
 
@@ -154,8 +134,19 @@ export function DashboardScreen() {
           </View>
 
         <View style={[styles.levelCard, responsive.levelCard]}>
-          <Text style={[styles.levelNumber, responsive.levelNumber]}>Level {currentLevel}</Text>
-          <Text style={[styles.levelTitle, responsive.levelTitle]}>{levelTitles[currentLevel]}</Text>
+          <View style={styles.levelHeader}>
+            <View style={styles.levelHeaderCopy}>
+              <Text style={[styles.levelNumber, responsive.levelNumber]} numberOfLines={1} adjustsFontSizeToFit>
+                Level {currentLevel}
+              </Text>
+              <Text style={[styles.levelTitle, responsive.levelTitle]} numberOfLines={1} adjustsFontSizeToFit>
+                {getLevelTitle(currentLevel)}
+              </Text>
+            </View>
+            <Text style={[styles.dayText, responsive.dayText]} numberOfLines={1} adjustsFontSizeToFit>
+              Day {currentDay}
+            </Text>
+          </View>
           <View style={[styles.coverFrame, responsive.coverFrame]}>
             <Image source={levelCovers[currentLevel]} style={styles.cover} resizeMode="cover" />
           </View>
@@ -343,6 +334,7 @@ function getDashboardResponsiveStyles(width: number, height: number, bottomInset
   const cardPadding = clamp(height * 0.025, 16, 22);
   const levelFontSize = clamp(width * 0.1, 38, 48);
   const titleFontSize = clamp(width * 0.038, 15, 18);
+  const dayFontSize = clamp(width * 0.075, narrowScreen ? 25 : 27, 34);
   
   // Cover Image
   const coverHeight = clamp(height * 0.24, 150, 200);
@@ -397,9 +389,13 @@ function getDashboardResponsiveStyles(width: number, height: number, bottomInset
       fontSize: titleFontSize,
       lineHeight: titleFontSize * 1.25
     },
+    dayText: {
+      fontSize: dayFontSize,
+      lineHeight: dayFontSize * 1.05
+    },
     coverFrame: {
       height: coverHeight,
-      marginTop: 8
+      marginTop: 10
     },
     progressBlock: {
       marginTop: 10,
@@ -527,6 +523,18 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 18 },
     elevation: 3
   },
+  levelHeader: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+    zIndex: 2
+  },
+  levelHeaderCopy: {
+    flex: 1,
+    minWidth: 0
+  },
   levelNumber: {
     color: poster.text,
     fontSize: 54,
@@ -544,6 +552,18 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     letterSpacing: 0,
     marginTop: 2,
+    zIndex: 2
+  },
+  dayText: {
+    color: '#000000',
+    fontSize: 28,
+    lineHeight: 30,
+    fontFamily: displayFont,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    textAlign: 'right',
+    flexShrink: 0,
+    maxWidth: '38%',
     zIndex: 2
   },
   coverFrame: {
