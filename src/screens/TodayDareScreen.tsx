@@ -212,7 +212,6 @@ function DareHeroCard({
           <View style={styles.titleArea}>
             <Text style={[styles.heroTitle, responsive.heroTitle]}>{dare.title}</Text>
             <DoodleUnderline width={responsive.underlineWidth} />
-            <Text style={[styles.heroSupport, responsive.heroSupport]}>{dare.description}</Text>
           </View>
           <Pressable 
             style={styles.tipButton}
@@ -608,7 +607,7 @@ function getDareResponsiveStyles(width: number, height: number, bottomInset: num
       paddingHorizontal: cardPadding,
       paddingTop: clamp(height * 0.028, 18, 24),
       paddingBottom: clamp(height * 0.027, 18, 24),
-      minHeight: veryShortScreen ? 342 : shortScreen ? 360 : 386,
+      minHeight: veryShortScreen ? 262 : shortScreen ? 280 : 306,
       transform: [{ rotate: width >= 390 ? '-0.7deg' : '0deg' }]
     },
     darePill: {
@@ -629,7 +628,7 @@ function getDareResponsiveStyles(width: number, height: number, bottomInset: num
       lineHeight: clamp(width * 0.054, 18, 21)
     },
     dashedDivider: {
-      marginTop: clamp(height * 0.026, 16, 22) + 38, // Added spacer to maintain card height
+      marginTop: clamp(height * 0.026, 16, 22) + 12, // Adjusted spacer to match removed description gap
       marginBottom: clamp(height * 0.023, 14, 20)
     },
     dashCount,
@@ -873,7 +872,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.4)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4
+    marginBottom: 0
   },
   darePill: {
     alignItems: 'center',
@@ -890,7 +889,7 @@ const styles = StyleSheet.create({
   middleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     marginTop: 20,
     gap: 12
   },
