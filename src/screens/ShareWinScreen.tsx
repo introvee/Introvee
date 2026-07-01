@@ -8,10 +8,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { colors } from '../constants/colors';
 import { fonts } from '../constants/fonts';
-<<<<<<< ours
-=======
 import { getBottomSafeSpace } from '../constants/layout';
->>>>>>> theirs
 import type { RootStackParamList } from '../navigation/types';
 import { convertDareToCompletionText } from '../utils/dareText';
 
@@ -27,11 +24,7 @@ export function ShareWinScreen({ navigation, route }: Props) {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <ScrollView
         style={styles.container}
-<<<<<<< ours
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
-=======
         contentContainerStyle={[styles.content, { paddingBottom: getBottomSafeSpace(insets.bottom) + 24 }]}
->>>>>>> theirs
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>Share win</Text>
