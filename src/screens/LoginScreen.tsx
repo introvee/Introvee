@@ -91,14 +91,19 @@ export function LoginScreen({ navigation }: Props) {
       >
         <View style={styles.contentInner}>
           <View style={styles.copyGroup}>
-            <Text style={[styles.title, compact && styles.titleCompact]}>
-              Welcome back,{'\n'}
-              <Text style={styles.greenWord}>Brave</Text> one.
-            </Text>
+            <View style={styles.titleGroup}>
+              <Text style={[styles.title, compact && styles.titleCompact]}>Welcome,</Text>
+              <View style={styles.titleLine}>
+                <View style={styles.highlightWordWrap}>
+                  <Text style={[styles.highlightWord, compact && styles.highlightWordCompact]}>Brave</Text>
+                </View>
+                <Text style={[styles.title, compact && styles.titleCompact]}> one.</Text>
+              </View>
+            </View>
 
             <Text style={[styles.subtitle, { marginTop: headingGap }, compact && styles.subtitleCompact]}>
-              Your safe space for small{'\n'}
-              steps forward.
+              Your 100-day journey to{'\n'}
+              confidence starts here.
             </Text>
           </View>
 
@@ -110,7 +115,7 @@ export function LoginScreen({ navigation }: Props) {
 
           <View style={styles.actionGroup}>
             <Pressable
-              accessibilityLabel="Sign in with Google"
+              accessibilityLabel="Continue with Google"
               accessibilityRole="button"
               onPress={handleLogin}
               disabled={isSigningIn}
@@ -121,7 +126,7 @@ export function LoginScreen({ navigation }: Props) {
               </View>
               <View style={styles.googleTextWrap}>
                 <Text style={styles.googleText} numberOfLines={1}>
-                  Sign in with Google
+                  {isSigningIn ? 'Opening Google...' : 'Continue with Google'}
                 </Text>
               </View>
             </Pressable>
@@ -187,8 +192,35 @@ const styles = StyleSheet.create({
     lineHeight: 37,
     marginBottom: 0
   },
-  greenWord: {
-    color: '#5E8F78'
+  titleGroup: {
+    alignItems: 'center'
+  },
+  titleLine: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center'
+  },
+  highlightWordWrap: {
+    backgroundColor: '#C9FF35',
+    borderRadius: 7,
+    paddingHorizontal: 8,
+    paddingTop: 1,
+    paddingBottom: 2,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  highlightWord: {
+    color: '#111111',
+    fontSize: 32,
+    lineHeight: 36,
+    letterSpacing: -0.5,
+    textAlign: 'center',
+    fontFamily: fonts.bold,
+    fontWeight: '800'
+  },
+  highlightWordCompact: {
+    fontSize: 30,
+    lineHeight: 34
   },
   subtitle: {
     color: '#666666',

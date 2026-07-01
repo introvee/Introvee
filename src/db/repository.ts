@@ -37,6 +37,7 @@ export async function getProfile(userId: string) {
 }
 
 export async function saveOnboardingProfile(userId: string, input: OnboardingInput) {
+  assertMinimumAge(input.age);
   const existing = await getProfile(userId);
   const now = new Date().toISOString();
   const avatarUrl = input.avatar_uri ? await uploadProfileAvatar(userId, input.avatar_uri) : input.avatar_url ?? existing?.avatar_url ?? null;
@@ -81,6 +82,10 @@ async function uploadProfileAvatar(userId: string, imageUri: string) {
 }
 
 export async function updateProfileDetails(userId: string, input: Partial<Profile> & { avatar_uri?: string }) {
+  if (typeof input.age === 'number') {
+    assertMinimumAge(input.age);
+  }
+
   let avatarUrl = input.avatar_url;
   if (input.avatar_uri) {
     avatarUrl = await uploadProfileAvatar(userId, input.avatar_uri);
@@ -165,7 +170,6 @@ export async function awardPoints(
   });
 
   if (error) {
-    console.error('Error awarding points:', error);
     return { pointsAwarded: 0, profile: null };
   }
 
@@ -371,6 +375,12 @@ function mapLog(row: Record<string, any>): UserDareLog {
 
 function removeUndefined<T extends Record<string, unknown>>(value: T) {
   return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
+}
+
+function assertMinimumAge(age: number) {
+  if (age < 16) {
+    throw new Error(copy.underage);
+  }
 }
 
 function getLocalDayRange() {

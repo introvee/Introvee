@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Modal, ActivityIndicator, Alert, TextInput } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Modal, ActivityIndicator, Alert, TextInput, Switch, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronRight, Trash2, Check } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/useAuthStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { supabase } from '../lib/supabase';
 import { getTabBarReservedHeight } from '../constants/layout';
+import { clamp, getResponsivePageMetrics } from '../constants/responsive';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '../navigation/types';
 
@@ -28,14 +30,33 @@ const C = {
 
 export function SettingsScreen() {
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
   const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const settings = useSettingsStore((state) => state.settings);
+  const fetchSettings = useSettingsStore((state) => state.fetchSettings);
+  const updateSettings = useSettingsStore((state) => state.updateSettings);
   
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
   const [deleteChecked, setDeleteChecked] = useState(false);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchSettings(user.id);
+    }
+  }, [fetchSettings, user?.id]);
+
+  const donationPopupEnabled = settings?.donation_popup_enabled ?? true;
+  const metrics = getResponsivePageMetrics(width, height);
+  const modalMaxHeight = Math.max(320, height - insets.top - insets.bottom - 32);
+
+  const handleDonationPopupToggle = (enabled: boolean) => {
+    if (!user?.id) return;
+    updateSettings(user.id, { donation_popup_enabled: enabled });
+  };
 
   const handleDeleteAccount = async () => {
     if (!user?.id) return;
@@ -56,7 +77,6 @@ export function SettingsScreen() {
       });
 
       if (invokeError) {
-        console.error("Error invoking delete-user edge function:", invokeError);
         Alert.alert("Notice", "App data deleted, but there was an issue completely removing the account. Please contact support.");
       }
 
@@ -75,44 +95,67 @@ export function SettingsScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingHorizontal: metrics.horizontalPadding, paddingVertical: metrics.short ? 12 : 16 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <ArrowLeft size={24} color={C.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={[styles.headerTitle, { fontSize: metrics.headerTitleSize }]}>Settings</Text>
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: getTabBarReservedHeight(insets.bottom) }]} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingHorizontal: metrics.horizontalPadding,
+            paddingBottom: getTabBarReservedHeight(insets.bottom),
+            maxWidth: metrics.maxWidth,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
 
         {/* Section 2: App */}
         <Text style={styles.sectionTitle}>App</Text>
-        <View style={styles.card}>
+        <View style={[styles.card, { borderRadius: metrics.cardRadius, paddingHorizontal: metrics.cardPadding }]}>
+          <View style={[styles.row, styles.borderBottom]}>
+            <View style={styles.rowLeft}>
+              <Text style={[styles.rowTitle, { fontSize: metrics.bodySize }]}>Donation popup</Text>
+              <Text style={[styles.rowDesc, { fontSize: metrics.smallSize }]}>Show donation mascot popup on Home screen</Text>
+            </View>
+            <Switch
+              value={donationPopupEnabled}
+              onValueChange={handleDonationPopupToggle}
+              trackColor={{ false: '#D8D8D8', true: '#1C1C1E' }}
+              thumbColor={C.white}
+              ios_backgroundColor="#D8D8D8"
+            />
+          </View>
           <TouchableOpacity style={[styles.navRow, styles.borderBottom]} onPress={() => navigation.navigate('HelpSupport')}>
-            <Text style={styles.rowTitle}>Help / Support</Text>
+            <Text style={[styles.rowTitle, { fontSize: metrics.bodySize }]}>Help / Support</Text>
             <ChevronRight size={20} color={C.muted} />
           </TouchableOpacity>
           <TouchableOpacity style={[styles.navRow, styles.borderBottom]} onPress={() => navigation.navigate('PrivacyPolicy')}>
-            <Text style={styles.rowTitle}>Privacy</Text>
+            <Text style={[styles.rowTitle, { fontSize: metrics.bodySize }]}>Privacy</Text>
             <ChevronRight size={20} color={C.muted} />
           </TouchableOpacity>
           <TouchableOpacity style={[styles.navRow, styles.borderBottom]} onPress={() => navigation.navigate('TermsConditions')}>
-            <Text style={styles.rowTitle}>Terms & Conditions</Text>
+            <Text style={[styles.rowTitle, { fontSize: metrics.bodySize }]}>Terms & Conditions</Text>
             <ChevronRight size={20} color={C.muted} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.navRow} onPress={() => navigation.navigate('About')}>
-            <Text style={styles.rowTitle}>About</Text>
+            <Text style={[styles.rowTitle, { fontSize: metrics.bodySize }]}>About</Text>
             <ChevronRight size={20} color={C.muted} />
           </TouchableOpacity>
         </View>
 
         {/* Section 3: Account */}
         <Text style={styles.sectionTitle}>Account</Text>
-        <View style={styles.card}>
+        <View style={[styles.card, { borderRadius: metrics.cardRadius, paddingHorizontal: metrics.cardPadding }]}>
           <TouchableOpacity style={styles.navRow} onPress={() => setDeleteModalVisible(true)}>
             <View style={styles.rowLeftInline}>
               <Trash2 size={20} color={C.danger} />
-              <Text style={[styles.rowTitle, { color: C.danger, marginLeft: 12 }]}>Delete Account</Text>
+              <Text style={[styles.rowTitle, { color: C.danger, marginLeft: 12, fontSize: metrics.bodySize }]}>Delete Account</Text>
             </View>
             <ChevronRight size={20} color={C.muted} />
           </TouchableOpacity>
@@ -122,8 +165,13 @@ export function SettingsScreen() {
 
       {/* Delete Account Modal */}
       <Modal visible={deleteModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <View style={[styles.modalOverlay, { paddingHorizontal: metrics.horizontalPadding, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }]}>
+          <View style={[styles.modalContent, { maxWidth: metrics.maxWidth, maxHeight: modalMaxHeight, borderRadius: metrics.cardRadius }]}>
+            <ScrollView
+              contentContainerStyle={{ padding: metrics.cardPadding }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
             <Text style={styles.modalTitle}>Delete Account</Text>
             <Text style={styles.modalMessage}>
               This will permanently delete your account, profile, progress, points, stages, and all app data. This action cannot be undone.
@@ -151,7 +199,7 @@ export function SettingsScreen() {
               <Text style={styles.checkboxText}>I understand this action cannot be undone.</Text>
             </TouchableOpacity>
 
-            <View style={styles.modalButtons}>
+            <View style={[styles.modalButtons, metrics.narrow && styles.modalButtonsStacked]}>
               <TouchableOpacity 
                 style={styles.cancelButton} 
                 onPress={() => {
@@ -178,6 +226,7 @@ export function SettingsScreen() {
                 )}
               </TouchableOpacity>
             </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -211,8 +260,9 @@ const styles = StyleSheet.create({
     width: 40,
   },
   content: {
-    paddingHorizontal: 20,
     paddingTop: 8,
+    width: '100%',
+    alignSelf: 'center',
   },
   sectionTitle: {
     fontSize: 14,
@@ -235,7 +285,6 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: C.border,
-    paddingHorizontal: 20,
   },
   row: {
     flexDirection: 'row',
@@ -260,6 +309,8 @@ const styles = StyleSheet.create({
   rowLeftInline: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    minWidth: 0,
   },
   rowTitle: {
     fontSize: 16,
@@ -281,12 +332,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
   },
   modalContent: {
     backgroundColor: C.white,
     borderRadius: 24,
-    padding: 24,
     width: '100%',
     shadowColor: C.shadow,
     shadowOffset: { width: 0, height: 8 },
@@ -314,6 +363,9 @@ const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: 'row',
     gap: 12,
+  },
+  modalButtonsStacked: {
+    flexDirection: 'column',
   },
   cancelButton: {
     flex: 1,

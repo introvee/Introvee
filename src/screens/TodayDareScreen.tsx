@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  AppState,
   Image,
   Modal,
   PanResponder,
@@ -13,7 +14,7 @@ import {
   useWindowDimensions,
   View
 } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   ArrowLeft,
@@ -42,6 +43,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export function TodayDareScreen() {
   const navigation = useNavigation<Nav>();
+  const isFocused = useIsFocused();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
@@ -51,7 +53,16 @@ export function TodayDareScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [easierMode] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [isAppActive, setIsAppActive] = useState(AppState.currentState === 'active');
   const responsive = getDareResponsiveStyles(width, height, insets.bottom);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      setIsAppActive(nextState === 'active');
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -142,11 +153,8 @@ export function TodayDareScreen() {
           <>
             <View style={[styles.sectionHeader, responsive.sectionHeader]}>
               <Text style={styles.sectionTitle}>Today’s Dare</Text>
-              <View style={styles.statusBadge}>
-                <Text style={styles.statusText}>Status: {(todaysLog as any) ? ((todaysLog as any).status === 'skipped' ? 'Skipped' : 'Completed') : 'Not completed'}</Text>
-              </View>
             </View>
-            <DareHeroCard dare={dare} easierMode={easierMode} statusText={(todaysLog as any) ? ((todaysLog as any).status === 'skipped' ? 'Skipped' : 'Completed') : 'Not completed'} responsive={responsive} />
+            <DareHeroCard dare={dare} easierMode={easierMode} isAppActive={isAppActive && isFocused} responsive={responsive} />
             {message ? <Text style={styles.message}>{message}</Text> : null}
             <MascotActionButtons
               disabled={false}
@@ -166,38 +174,59 @@ export function TodayDareScreen() {
 function DareHeroCard({
   dare,
   easierMode,
-  statusText,
+  isAppActive,
   responsive
 }: {
   dare: Dare;
   easierMode: boolean;
-  statusText: string;
+  isAppActive: boolean;
   responsive: ReturnType<typeof getDareResponsiveStyles>;
 }) {
   const [tipVisible, setTipVisible] = useState(false);
-  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const shakeRotateAnim = useRef(new Animated.Value(0)).current;
+  const shakeScaleAnim = useRef(new Animated.Value(1)).current;
   const rawTipText = easierMode ? dare.easier_description : dare.description;
   const tipText = rawTipText?.trim() || 'No tip available for this dare yet.';
-  const shakeRotation = shakeAnim.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ['-7deg', '7deg']
+  const shakeRotation = shakeRotateAnim.interpolate({
+    inputRange: [-6, 0, 6],
+    outputRange: ['-6deg', '0deg', '6deg']
   });
 
   useEffect(() => {
+    if (!isAppActive) {
+      shakeRotateAnim.stopAnimation();
+      shakeScaleAnim.stopAnimation();
+      return;
+    }
+
     const runShake = () => {
-      shakeAnim.setValue(0);
-      Animated.sequence([
-        Animated.timing(shakeAnim, { toValue: 1, duration: 70, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: -1, duration: 90, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: 0.75, duration: 80, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: -0.45, duration: 70, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: 0, duration: 90, useNativeDriver: true })
+      shakeRotateAnim.stopAnimation();
+      shakeScaleAnim.stopAnimation();
+      shakeRotateAnim.setValue(0);
+      shakeScaleAnim.setValue(1);
+
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(shakeRotateAnim, { toValue: -6, duration: 120, useNativeDriver: true }),
+          Animated.timing(shakeRotateAnim, { toValue: 6, duration: 140, useNativeDriver: true }),
+          Animated.timing(shakeRotateAnim, { toValue: -4, duration: 130, useNativeDriver: true }),
+          Animated.timing(shakeRotateAnim, { toValue: 4, duration: 130, useNativeDriver: true }),
+          Animated.timing(shakeRotateAnim, { toValue: 0, duration: 150, useNativeDriver: true })
+        ]),
+        Animated.sequence([
+          Animated.timing(shakeScaleAnim, { toValue: 1.06, duration: 180, useNativeDriver: true }),
+          Animated.timing(shakeScaleAnim, { toValue: 1, duration: 490, useNativeDriver: true })
+        ])
       ]).start();
     };
 
-    const interval = setInterval(runShake, 10000);
-    return () => clearInterval(interval);
-  }, [shakeAnim]);
+    const interval = setInterval(runShake, 15000);
+    return () => {
+      clearInterval(interval);
+      shakeRotateAnim.stopAnimation();
+      shakeScaleAnim.stopAnimation();
+    };
+  }, [isAppActive, shakeRotateAnim, shakeScaleAnim]);
 
   return (
     <View style={[styles.cardStage, responsive.cardStage]}>
@@ -219,48 +248,46 @@ function DareHeroCard({
             hitSlop={12}
             accessibilityLabel="Show tip"
           >
-            <Animated.View style={{ transform: [{ translateX: shakeAnim }, { rotate: shakeRotation }] }}>
+            <Animated.View style={{ transform: [{ rotate: shakeRotation }, { scale: shakeScaleAnim }] }}>
               <Lightbulb size={16} color="#FFFFFF" strokeWidth={2.5} />
             </Animated.View>
           </Pressable>
         </View>
 
-        <View style={[styles.dashedDivider, responsive.dashedDivider]}>
-          {Array.from({ length: responsive.dashCount }).map((_, index) => (
-            <View key={index} style={styles.dash} />
-          ))}
-        </View>
+        <View style={[styles.statsSection, responsive.statsSection]}>
+          <View style={styles.dashedDivider}>
+            {Array.from({ length: responsive.dashCount }).map((_, index) => (
+              <View key={index} style={styles.dash} />
+            ))}
+          </View>
 
-        <View style={styles.infoGrid}>
-          <InfoColumn
-            icon={<CircleDot color={theme.cardMuted} size={responsive.infoIconSize} strokeWidth={2} />}
-            label="Difficulty"
-            value={formatDifficulty(dare.difficulty)}
-            responsive={responsive}
-          />
-          <View style={styles.infoSeparator} />
-          <InfoColumn
-            icon={<TrendingUp color={theme.cardMuted} size={responsive.infoIconSize + 1} strokeWidth={1.9} />}
-            label="Current level"
-            value={`Level ${dare.level}`}
-            subtext={`Stage ${dare.stage}/5`}
-            responsive={responsive}
-          />
-          <View style={styles.infoSeparator} />
-          <InfoColumn
-            icon={<Sparkles color={theme.cardMuted} size={responsive.infoIconSize + 1} strokeWidth={1.9} />}
-            label="Day"
-            value={`Day ${dare.day_number}/100`}
-            responsive={responsive}
-          />
-          <View style={styles.infoSeparator} />
-          <InfoColumn
-            icon={<CheckCircle2 color={theme.cardMuted} size={responsive.infoIconSize + 1} strokeWidth={1.9} />}
-            label="Points"
-            value={`+${dare.points}`}
-            subtext={statusText}
-            responsive={responsive}
-          />
+          <View style={[styles.infoGrid, responsive.infoGrid]}>
+            <InfoColumn
+              icon={<CircleDot color={theme.cardMuted} size={responsive.infoIconSize} strokeWidth={2} />}
+              label="Difficulty"
+              value={formatDifficulty(dare.difficulty)}
+              responsive={responsive}
+            />
+            <InfoColumn
+              icon={<TrendingUp color={theme.cardMuted} size={responsive.infoIconSize + 1} strokeWidth={1.9} />}
+              label="Current level"
+              value={`Level ${dare.level}`}
+              subtext={`Stage ${dare.stage}/5`}
+              responsive={responsive}
+            />
+            <InfoColumn
+              icon={<Sparkles color={theme.cardMuted} size={responsive.infoIconSize + 1} strokeWidth={1.9} />}
+              label="Day"
+              value={`Day ${dare.day_number}/100`}
+              responsive={responsive}
+            />
+            <InfoColumn
+              icon={<CheckCircle2 color={theme.cardMuted} size={responsive.infoIconSize + 1} strokeWidth={1.9} />}
+              label="Points"
+              value={`+${dare.points}`}
+              responsive={responsive}
+            />
+          </View>
         </View>
       </View>
 
@@ -270,8 +297,9 @@ function DareHeroCard({
         animationType="fade"
         onRequestClose={() => setTipVisible(false)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setTipVisible(false)}>
-          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={[styles.modalOverlay, responsive.modalOverlay]} onPress={() => setTipVisible(false)}>
+          <Pressable style={[styles.modalContent, responsive.modalContent]} onPress={(e) => e.stopPropagation()}>
+            <ScrollView contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.modalIconBox}>
               <Lightbulb size={24} color="#111" strokeWidth={2.5} />
             </View>
@@ -281,6 +309,7 @@ function DareHeroCard({
             <Pressable style={styles.modalButton} onPress={() => setTipVisible(false)}>
               <Text style={styles.modalButtonText}>Got it</Text>
             </Pressable>
+            </ScrollView>
           </Pressable>
         </Pressable>
       </Modal>
@@ -583,8 +612,9 @@ function getDareResponsiveStyles(width: number, height: number, bottomInset: num
   const swipeHandleInset = 5;
   const swipeHandleSize = swipeButtonHeight - swipeHandleInset * 2;
   const buttonTextSize = clamp(width * 0.039, 14, 16);
-  const infoTextSize = clamp(width * 0.028, 10.5, 12);
-  const dashCount = Math.max(12, Math.floor((width - horizontalPadding * 2 - cardPadding * 2) / 17));
+  const infoTextSize = clamp(width * 0.025, 9.5, 10.8);
+  const statsHorizontalPadding = narrowScreen ? 2 : 4;
+  const dashCount = Math.max(13, Math.floor((width - horizontalPadding * 2 - cardPadding * 2 - statsHorizontalPadding * 2) / 15));
 
   return {
     content: {
@@ -636,26 +666,29 @@ function getDareResponsiveStyles(width: number, height: number, bottomInset: num
       fontSize: clamp(width * 0.038, 13.5, 16),
       lineHeight: clamp(width * 0.054, 18, 21)
     },
-    dashedDivider: {
-      marginTop: clamp(height * 0.026, 16, 22) + 12, // Adjusted spacer to match removed description gap
-      marginBottom: clamp(height * 0.023, 14, 20)
+    statsSection: {
+      marginTop: clamp(height * 0.026, 16, 22) + 8,
+      paddingHorizontal: statsHorizontalPadding
     },
     dashCount,
+    infoGrid: {
+      paddingTop: clamp(height * 0.016, 10, 13)
+    },
     infoIconSize: clamp(width * 0.044, 16, 19),
     infoIconSlot: {
-      height: clamp(height * 0.029, 20, 24)
+      height: clamp(height * 0.027, 18, 22)
     },
     infoLabel: {
       fontSize: infoTextSize,
       lineHeight: infoTextSize + 4
     },
     infoValue: {
-      fontSize: clamp(width * 0.034, 12.5, 15),
-      lineHeight: clamp(width * 0.047, 17, 20)
+      fontSize: clamp(width * 0.031, 11.5, 13.5),
+      lineHeight: clamp(width * 0.043, 15.5, 18)
     },
     infoSubtext: {
-      fontSize: clamp(width * 0.029, 11, 12.5),
-      lineHeight: clamp(width * 0.041, 15, 17)
+      fontSize: clamp(width * 0.027, 10, 12),
+      lineHeight: clamp(width * 0.039, 14, 16)
     },
     actionSection: {
       marginTop: veryShortScreen ? 12 : 16,
@@ -684,7 +717,16 @@ function getDareResponsiveStyles(width: number, height: number, bottomInset: num
       fontSize: buttonTextSize,
       lineHeight: buttonTextSize + 5
     },
-    navIconSize: 24
+    navIconSize: 24,
+    modalOverlay: {
+      paddingHorizontal: horizontalPadding,
+      paddingVertical: clamp(height * 0.04, 18, 32)
+    },
+    modalContent: {
+      maxWidth: Math.min(width - horizontalPadding * 2, 340),
+      maxHeight: height - clamp(height * 0.08, 36, 64),
+      padding: clamp(width * 0.052, 18, 24)
+    }
   };
 }
 
@@ -921,11 +963,14 @@ const styles = StyleSheet.create({
     marginTop: 9,
     letterSpacing: 0
   },
+  statsSection: {
+    width: '100%'
+  },
   dashedDivider: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    opacity: 0.5
+    opacity: 0.48
   },
   dash: {
     width: 8,
@@ -934,41 +979,43 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.7)'
   },
   infoGrid: {
-    minHeight: 82,
+    minHeight: 72,
     flexDirection: 'row',
-    alignItems: 'stretch'
+    alignItems: 'flex-start',
+    justifyContent: 'space-between'
   },
   infoColumn: {
     flex: 1,
+    alignItems: 'center',
     justifyContent: 'flex-start',
-    minWidth: 0
-  },
-  infoSeparator: {
-    width: StyleSheet.hairlineWidth,
-    marginHorizontal: 6,
-    backgroundColor: 'rgba(255,255,255,0.2)'
+    minWidth: 0,
+    paddingHorizontal: 3
   },
   infoIconSlot: {
-    alignItems: 'flex-start',
+    width: '100%',
+    alignItems: 'center',
     justifyContent: 'center'
   },
   infoLabel: {
     color: theme.cardMuted,
     fontFamily: fonts.regular,
-    marginTop: 3,
-    letterSpacing: 0
+    marginTop: 2,
+    letterSpacing: 0,
+    textAlign: 'center'
   },
   infoValue: {
     color: theme.cardText,
     fontFamily: fonts.bold,
-    marginTop: 4,
-    letterSpacing: 0
+    marginTop: 3,
+    letterSpacing: 0,
+    textAlign: 'center'
   },
   infoSubtext: {
     color: theme.cardMuted,
     fontFamily: fonts.regular,
     marginTop: 1,
-    letterSpacing: 0
+    letterSpacing: 0,
+    textAlign: 'center'
   },
   actionSection: {
     alignItems: 'center',
@@ -1081,13 +1128,16 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
-    padding: 24,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 10 },
     elevation: 10
+  },
+  modalScrollContent: {
+    alignItems: 'center',
+    flexGrow: 1
   },
   modalIconBox: {
     width: 48,

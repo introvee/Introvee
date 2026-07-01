@@ -21,8 +21,9 @@ function FlyingPoint({ animation }: { animation: PointAnimation }) {
   const scale = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
+    let mounted = true;
     // Initial pop in
-    Animated.parallel([
+    const popInAnimation = Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
         duration: 200,
@@ -34,10 +35,11 @@ function FlyingPoint({ animation }: { animation: PointAnimation }) {
         tension: 100,
         useNativeDriver: true
       })
-    ]).start();
+    ]);
+    popInAnimation.start();
 
     // Fly to badge
-    Animated.sequence([
+    const flyAnimation = Animated.sequence([
       Animated.delay(600), // hold for a moment
       Animated.parallel([
         Animated.timing(translateX, {
@@ -63,11 +65,19 @@ function FlyingPoint({ animation }: { animation: PointAnimation }) {
         duration: 50,
         useNativeDriver: true
       })
-    ]).start(() => {
+    ]);
+    flyAnimation.start(() => {
+      if (!mounted) return;
       triggerBadgePop();
       removeAnimation(animation.id);
     });
-  }, []);
+
+    return () => {
+      mounted = false;
+      popInAnimation.stop();
+      flyAnimation.stop();
+    };
+  }, [animation.id, destX, destY, opacity, removeAnimation, scale, translateX, translateY, triggerBadgePop]);
 
   return (
     <Animated.View
@@ -104,18 +114,18 @@ export function PointsOverlay() {
 const styles = StyleSheet.create({
   flyingContainer: {
     position: 'absolute',
-    backgroundColor: '#00FF41',
+    backgroundColor: '#111111',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 24,
-    boxShadow: '0px 4px 10px rgba(0, 138, 39, 0.5)',
+    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.32)',
     elevation: 8,
     borderWidth: 2,
     borderColor: '#FFFFFF',
     zIndex: 9999
   },
   flyingText: {
-    color: '#111111',
+    color: '#FFFFFF',
     fontFamily: fonts.bold,
     fontSize: 22,
     letterSpacing: 0.5

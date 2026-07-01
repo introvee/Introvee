@@ -21,21 +21,19 @@ type AuthState = {
 
 let bootstrapPromise: Promise<void> | null = null;
 
-async function loadProfileSafely(userId: string, source: string) {
+async function loadProfileSafely(userId: string) {
   try {
     await useProfileStore.getState().loadProfile(userId);
-    console.log(`[${source}] Profile loaded:`, useProfileStore.getState().profile?.name);
-  } catch (error) {
-    console.warn(`[${source}] Profile load failed (non-blocking):`, error);
+  } catch {
+    useProfileStore.getState().setProfile(null);
   }
 }
 
 function getOAuthRedirectUri() {
   const configuredRedirectUri = process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL?.trim();
-  if (configuredRedirectUri) return configuredRedirectUri;
 
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    return window.location.origin;
+    return configuredRedirectUri || window.location.origin;
   }
 
   return makeRedirectUri({
@@ -72,48 +70,38 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       try {
-        // First, check if we already have a session (restored from storage)
-        console.log('[Bootstrap] Checking for existing session...');
         const { data: existing, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
 
         if (existing.session) {
-          console.log('[Bootstrap] Found existing session for user:', existing.session.user.id);
-          // Clean up any stale OAuth params in URL
           clearWebOAuthParams();
           const user = existing.session.user;
           set({ user, isBootstrapping: false });
-          console.log('[Bootstrap] Loading profile...');
-          await loadProfileSafely(user.id, 'Bootstrap');
+          await loadProfileSafely(user.id);
           return;
         }
 
-        // No existing session — try exchanging OAuth code if present
         const webCode = getWebOAuthCode();
         if (webCode) {
-          console.log('[Bootstrap] Exchanging web OAuth code...');
+          let timeoutId: ReturnType<typeof setTimeout> | undefined;
           const timeout = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Code exchange timed out')), 8000)
+            timeoutId = setTimeout(() => reject(new Error('Code exchange timed out')), 8000)
           );
           const exchange = supabase.auth.exchangeCodeForSession(webCode);
-          const { data: sessionData, error: exchangeError } = await Promise.race([exchange, timeout.then(() => { throw new Error('timeout'); })]);
+          const { data: sessionData, error: exchangeError } = await Promise.race([exchange, timeout]).finally(() => {
+            if (timeoutId) clearTimeout(timeoutId);
+          });
           if (exchangeError) throw exchangeError;
           clearWebOAuthParams();
 
           const user = sessionData.session?.user ?? null;
           set({ user, isBootstrapping: false });
-          if (user) {
-            console.log('[Bootstrap] Loading profile for user:', user.id);
-            await loadProfileSafely(user.id, 'Bootstrap');
-          }
+          if (user) await loadProfileSafely(user.id);
           return;
         }
 
-        // No session and no code — user is not logged in
-        console.log('[Bootstrap] No session found');
         set({ user: null, isBootstrapping: false });
       } catch (error) {
-        console.warn('[Bootstrap] Error:', error);
         set({ isBootstrapping: false });
         throw error;
       } finally {
@@ -126,10 +114,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   loginWithGoogle: async () => {
     set({ isSigningIn: true });
     try {
-      console.log('Google login button clicked');
       assertSupabaseConfigured();
       const redirectTo = getOAuthRedirectUri();
-      console.log('Generating OAuth URL...', redirectTo);
 
       if (Platform.OS === 'web') {
         const { error } = await supabase.auth.signInWithOAuth({
@@ -148,21 +134,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       });
 
-      if (error) {
-        console.error('Error getting OAuth URL:', error);
-        throw error;
-      }
+      if (error) throw error;
       if (!data.url) throw new Error('Supabase did not return a Google login URL.');
-      console.log('OAuth URL generated:', data.url);
 
-      console.log('Opening browser...');
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-      console.log('Browser opened, redirect received:', result);
-      
-      if (result.type !== 'success') {
-        console.log('Browser was cancelled or dismissed');
-        return;
-      }
+      if (result.type !== 'success') return;
 
       const callbackUrl = new URL(result.url);
       const code = callbackUrl.searchParams.get('code');
@@ -172,7 +148,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         if (exchangeError) throw exchangeError;
         const user = sessionData.session?.user ?? null;
         set({ user, isBootstrapping: false });
-        if (user) await loadProfileSafely(user.id, 'Login');
+        if (user) await loadProfileSafely(user.id);
         return;
       }
 
@@ -180,30 +156,18 @@ export const useAuthStore = create<AuthState>((set) => ({
       const accessToken = params.get('access_token');
       const refreshToken = params.get('refresh_token');
       if (!accessToken || !refreshToken) {
-        console.error('Google login completed without a Supabase session.', callbackUrl.toString());
         throw new Error('Google login completed without a Supabase session.');
       }
-
-      console.log('access_token found:', !!accessToken);
-      console.log('refresh_token found:', !!refreshToken);
 
       const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken
       });
-      if (sessionError) {
-        console.error('Error saving Supabase session:', sessionError);
-        throw sessionError;
-      }
-
-      console.log('Supabase session saved');
+      if (sessionError) throw sessionError;
 
       const user = sessionData.session?.user ?? null;
       set({ user, isBootstrapping: false });
-      if (user) await loadProfileSafely(user.id, 'Login');
-    } catch (e) {
-      console.error('Login error:', e);
-      throw e;
+      if (user) await loadProfileSafely(user.id);
     } finally {
       set({ isSigningIn: false });
     }
@@ -217,20 +181,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 if (isSupabaseConfigured) {
   supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log('[Auth] State changed:', event);
-
     try {
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('[Auth] User signed in:', session.user.id);
         useAuthStore.setState({ user: session.user, isBootstrapping: false });
-        await loadProfileSafely(session.user.id, 'Auth');
+        await loadProfileSafely(session.user.id);
       } else if (event === 'SIGNED_OUT') {
-        console.log('[Auth] User signed out');
         useAuthStore.setState({ user: null, isBootstrapping: false });
         useProfileStore.getState().setProfile(null);
       }
-    } catch (error) {
-      console.warn('[Auth] State change handler failed:', error);
+    } catch {
       useAuthStore.setState({ isBootstrapping: false });
     }
   });

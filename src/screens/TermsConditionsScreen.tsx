@@ -37,7 +37,7 @@ export function TermsConditionsScreen() {
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: getTabBarReservedHeight(insets.bottom) }]} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.paragraph}>
-            Welcome to the Introvert App. By using this application, you agree to these Terms & Conditions.
+            Welcome to Introvee. By using this application, you agree to these Terms & Conditions.
           </Text>
           <Text style={styles.paragraph}>
             1. You must be at least 16 years old to use this app.

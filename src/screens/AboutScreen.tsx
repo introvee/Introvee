@@ -41,12 +41,12 @@ export function AboutScreen() {
             <View style={styles.logoPlaceholder}>
               <Text style={styles.logoText}>IA</Text>
             </View>
-            <Text style={styles.appName}>Introvert App</Text>
+            <Text style={styles.appName}>Introvee</Text>
             <Text style={styles.version}>Version 1.0.0</Text>
           </View>
           
           <Text style={styles.description}>
-            The Introvert App is designed to help you take small, brave steps in your daily life. Build your confidence through daily dares and track your journey at your own pace.
+            Introvee is designed to help you take small, brave steps in your daily life. Build your confidence through daily dares and track your journey at your own pace.
           </Text>
 
           <View style={styles.divider} />

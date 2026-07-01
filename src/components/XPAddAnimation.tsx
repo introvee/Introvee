@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Star } from 'lucide-react-native';
-import Svg, { Circle } from 'react-native-svg';
 import { fonts } from '../constants/fonts';
+import { clamp } from '../constants/responsive';
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const rewardWhite = '#FFFFFF';
 
 interface XPAddAnimationProps {
@@ -16,26 +15,24 @@ export function XPAddAnimation({
   totalEarned,
   onAnimationComplete
 }: XPAddAnimationProps) {
+  const { width, height } = useWindowDimensions();
   const [animatedXP, setAnimatedXP] = useState(0);
-  const ringProgress = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-
-  const size = 160;
-  const strokeWidth = 14;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
+  const popupSize = clamp(Math.min(width, height) * 0.34, 118, 160);
+  const scoreFontSize = clamp(popupSize * 0.26, 32, 42);
 
   useEffect(() => {
     const duration = 1500;
     const startTime = Date.now();
     let animationFrame: number;
+    let mounted = true;
 
     const animateNum = () => {
       const now = Date.now();
       const progress = Math.min(1, (now - startTime) / duration);
       const easeProgress = 1 - Math.pow(1 - progress, 4);
 
-      setAnimatedXP(Math.round(easeProgress * totalEarned));
+      if (mounted) setAnimatedXP(Math.round(easeProgress * totalEarned));
 
       if (progress < 1) {
         animationFrame = requestAnimationFrame(animateNum);
@@ -44,42 +41,37 @@ export function XPAddAnimation({
 
     animationFrame = requestAnimationFrame(animateNum);
 
-    Animated.sequence([
+    const animation = Animated.sequence([
       Animated.timing(opacityAnim, {
         toValue: 1,
         duration: 300,
         useNativeDriver: true
       }),
-      Animated.timing(ringProgress, {
-        toValue: 1,
-        duration: duration,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: false
-      }),
+      Animated.delay(duration),
       Animated.delay(900),
       Animated.timing(opacityAnim, {
         toValue: 0,
         duration: 300,
         useNativeDriver: true
       })
-    ]).start(() => {
+    ]);
+
+    animation.start(() => {
+      if (!mounted) return;
       onAnimationComplete();
     });
 
     return () => {
+      mounted = false;
       if (animationFrame) cancelAnimationFrame(animationFrame);
+      animation.stop();
     };
-  }, [totalEarned, onAnimationComplete, ringProgress, opacityAnim]);
-
-  const strokeDashoffset = ringProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [circumference, 0]
-  });
+  }, [totalEarned, onAnimationComplete, opacityAnim]);
 
   return (
     <Animated.View style={[styles.container, { opacity: opacityAnim }]} pointerEvents="none">
       <View style={styles.overlay} />
-      <View style={styles.circleContainer}>
+      <View style={[styles.circleContainer, { width: popupSize, height: popupSize }]}>
         {/* Subtle decorative background dots */}
         <View style={[styles.dot, styles.dot1]} />
         <View style={[styles.dot, styles.dot2]} />
@@ -88,34 +80,10 @@ export function XPAddAnimation({
         <View style={[styles.dot, styles.dot5]} />
         <View style={[styles.dot, styles.dot6]} />
 
-        <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="rgba(255, 255, 255, 0.08)"
-            strokeWidth={strokeWidth}
-            fill="none"
-          />
-          <AnimatedCircle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={rewardWhite}
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            rotation="-90"
-            origin={`${size / 2}, ${size / 2}`}
-          />
-        </Svg>
-
         <View style={styles.scoreOverlay}>
           <View style={styles.scoreRow}>
-            <Star size={24} color={rewardWhite} fill={rewardWhite} />
-            <Text style={styles.scoreText}>+{animatedXP}</Text>
+            <Star size={clamp(popupSize * 0.15, 18, 24)} color={rewardWhite} fill={rewardWhite} />
+            <Text style={[styles.scoreText, { fontSize: scoreFontSize }]}>+{animatedXP}</Text>
           </View>
         </View>
       </View>

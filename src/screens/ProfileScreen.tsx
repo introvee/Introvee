@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator, Platform } from 'react-native';
+import { Alert, StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator, Platform, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronRight, User, Lock, Bell, Globe, Info, Palette, Calendar, HelpCircle, Shield, FileText, LogOut, Edit3, Camera, X, Trophy, Flame, Target, Settings } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../constants/colors';
 import { fonts } from '../constants/fonts';
-import { getTabBarReservedHeight } from '../constants/layout';
+import { getTabBarBottomOffset, TAB_BAR_BASE_HEIGHT } from '../constants/layout';
+import { clamp, getResponsivePageMetrics } from '../constants/responsive';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
 import type { Profile } from '../types/profile';
@@ -140,27 +141,29 @@ function EditProfileModal({ visible, onClose, profile, onSave }: { visible: bool
 
 
 
-function StatBlock({ icon: Icon, value, label }: { icon: any; value: string | number; label: string }) {
+function StatBlock({ icon: Icon, value, label, compact }: { icon: any; value: string | number; label: string; compact: boolean }) {
   return (
     <View style={styles.statBlock}>
-      <View style={styles.statIconContainer}>
-        <Icon size={24} color={C.text} />
+      <View style={[styles.statIconContainer, compact && styles.statIconContainerCompact]}>
+        <Icon size={compact ? 20 : 24} color={C.text} />
       </View>
-      <Text style={styles.statBlockValue}>{value}</Text>
-      <Text style={styles.statBlockLabel}>{label}</Text>
+      <Text style={[styles.statBlockValue, compact && styles.statBlockValueCompact]}>{value}</Text>
+      <Text style={[styles.statBlockLabel, compact && styles.statBlockLabelCompact]} numberOfLines={1} adjustsFontSizeToFit>
+        {label}
+      </Text>
     </View>
   );
 }
 
-function MenuItem({ icon: Icon, label, value, onPress, isLast }: { icon: any; label: string; value?: string | number; onPress?: () => void; isLast?: boolean }) {
+function MenuItem({ icon: Icon, label, value, onPress, isLast, compact }: { icon: any; label: string; value?: string | number; onPress?: () => void; isLast?: boolean; compact: boolean }) {
   return (
-    <TouchableOpacity style={[styles.menuItem, !isLast && styles.menuItemBorder]} onPress={onPress} disabled={!onPress}>
+    <TouchableOpacity style={[styles.menuItem, compact && styles.menuItemCompact, !isLast && styles.menuItemBorder]} onPress={onPress} disabled={!onPress}>
       <View style={styles.menuItemLeft}>
-        <Icon size={20} color={C.text} />
-        <Text style={styles.menuItemLabel}>{label}</Text>
+        <Icon size={compact ? 18 : 20} color={C.text} />
+        <Text style={[styles.menuItemLabel, compact && styles.menuItemLabelCompact]} numberOfLines={1}>{label}</Text>
       </View>
       <View style={styles.menuItemRight}>
-        {value ? <Text style={styles.menuItemValue}>{value}</Text> : null}
+        {value ? <Text style={[styles.menuItemValue, compact && styles.menuItemValueCompact]} numberOfLines={1} adjustsFontSizeToFit>{value}</Text> : null}
         {onPress ? <ChevronRight size={20} color={C.muted} /> : null}
       </View>
     </TouchableOpacity>
@@ -173,6 +176,7 @@ export function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
   const navigation = useNavigation<any>();
 
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -188,49 +192,81 @@ export function ProfileScreen() {
   }
 
   const userEmail = user?.email || 'No email available';
+  const metrics = getResponsivePageMetrics(width, height);
+  const compact = height < 840 || width < 390;
+  const veryCompact = height < 760;
+  const tabReserve = TAB_BAR_BASE_HEIGHT + getTabBarBottomOffset(insets.bottom) + 10;
+  const avatarSize = compact ? (veryCompact ? 74 : 84) : 100;
+  const logoutButtonWidth = Math.min(width - metrics.horizontalPadding * 2, metrics.maxWidth);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
+      <View style={[styles.header, { paddingVertical: compact ? 8 : 16 }]}>
+        <Text style={[styles.headerTitle, { fontSize: compact ? 17 : 18 }]}>Profile</Text>
       </View>
 
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: getTabBarReservedHeight(insets.bottom) }]} showsVerticalScrollIndicator={false}>
-        <View style={styles.profileSection}>
+      <ScrollView
+        scrollEnabled={veryCompact}
+        bounces={veryCompact}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: metrics.horizontalPadding,
+            paddingTop: compact ? 2 : 8,
+            paddingBottom: tabReserve,
+            maxWidth: metrics.maxWidth,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.profileSection, { marginBottom: compact ? 16 : 32 }]}>
           <TouchableOpacity style={styles.avatarWrapper} onPress={() => setEditModalVisible(true)}>
             {profile.avatar_url ? (
-              <Image source={{ uri: profile.avatar_url }} style={styles.avatarImageLarge} />
+              <Image source={{ uri: profile.avatar_url }} style={[styles.avatarImageLarge, { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }]} />
             ) : (
-              <View style={styles.avatarPlaceholderLarge}>
-                <Text style={styles.avatarInitialsLarge}>{profile.name.charAt(0).toUpperCase()}</Text>
+              <View style={[styles.avatarPlaceholderLarge, { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }]}>
+                <Text style={[styles.avatarInitialsLarge, { fontSize: compact ? 30 : 36 }]}>{profile.name.charAt(0).toUpperCase()}</Text>
               </View>
             )}
-            <View style={styles.editIconBadge}>
-              <Edit3 size={14} color="#FFF" />
+            <View style={[styles.editIconBadge, compact && styles.editIconBadgeCompact]}>
+              <Edit3 size={compact ? 12 : 14} color="#FFF" />
             </View>
           </TouchableOpacity>
-          <Text style={styles.profileNameCentered}>{profile.name}</Text>
-          <Text style={styles.profileEmailCentered}>{userEmail}</Text>
+          <Text style={[styles.profileNameCentered, compact && styles.profileNameCompact]} numberOfLines={1} adjustsFontSizeToFit>{profile.name}</Text>
+          <Text style={[styles.profileEmailCentered, compact && styles.profileEmailCompact]} numberOfLines={1} adjustsFontSizeToFit>{userEmail}</Text>
         </View>
 
-        <View style={styles.statsRow}>
-          <StatBlock icon={Trophy} value={profile.total_points} label="Total Points" />
-          <StatBlock icon={Flame} value={profile.current_level} label="Current Level" />
-          <StatBlock icon={Target} value={profile.current_stage} label="Current Stage" />
+        <View style={[styles.statsRow, { marginBottom: compact ? 16 : 32 }]}>
+          <StatBlock icon={Trophy} value={profile.total_points} label="Total Points" compact={compact} />
+          <StatBlock icon={Flame} value={profile.current_level} label="Current Level" compact={compact} />
+          <StatBlock icon={Target} value={profile.current_stage} label="Current Stage" compact={compact} />
         </View>
 
-        <View style={styles.menuCard}>
-          <MenuItem icon={User} label="Age" value={profile.age} />
-          <MenuItem icon={Info} label="Gender" value={profile.gender} />
-          <MenuItem icon={Globe} label="Life Category" value={profile.life_category} />
-          <MenuItem icon={Settings} label="Settings" onPress={() => navigation.navigate('Settings')} isLast />
+        <View style={[styles.menuCard, { borderRadius: compact ? 20 : 24, paddingHorizontal: compact ? 16 : 20, paddingVertical: compact ? 4 : 8 }]}>
+          <MenuItem icon={User} label="Age" value={profile.age} compact={compact} />
+          <MenuItem icon={Info} label="Gender" value={profile.gender} compact={compact} />
+          <MenuItem icon={Globe} label="Life Category" value={profile.life_category} compact={compact} />
+          <MenuItem icon={Settings} label="Settings" onPress={() => navigation.navigate('Settings')} isLast compact={compact} />
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <LogOut size={20} color={colors.danger} />
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
       </ScrollView>
+
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel="Log out"
+        style={[
+          styles.logoutButton,
+          styles.logoutFixedButton,
+          {
+            width: logoutButtonWidth,
+            bottom: tabReserve + 10,
+          },
+        ]}
+        onPress={handleLogout}
+      >
+        <LogOut size={compact ? 17 : 20} color={colors.danger} />
+        <Text style={[styles.logoutText, compact && styles.logoutTextCompact]}>Logout</Text>
+      </TouchableOpacity>
 
       <EditProfileModal
         visible={editModalVisible}
@@ -267,7 +303,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   header: { alignItems: 'center', justifyContent: 'center', paddingVertical: 16 },
   headerTitle: { color: '#1B1B3A', fontSize: 18, fontFamily: displayFont, fontWeight: '700' },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 100 },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 100, width: '100%', alignSelf: 'center' },
   
   profileSection: {
     alignItems: 'center',
@@ -310,6 +346,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: C.bg,
   },
+  editIconBadgeCompact: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+  },
   profileNameCentered: {
     fontSize: 24,
     fontFamily: displayFont,
@@ -317,11 +359,18 @@ const styles = StyleSheet.create({
     color: '#1B1B3A',
     marginBottom: 4,
   },
+  profileNameCompact: {
+    fontSize: 21,
+    marginBottom: 2,
+  },
   profileEmailCentered: {
     fontSize: 15,
     fontFamily: displayFont,
     fontWeight: '500',
     color: C.muted,
+  },
+  profileEmailCompact: {
+    fontSize: 13,
   },
 
   statsRow: {
@@ -348,6 +397,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  statIconContainerCompact: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    marginBottom: 8,
+  },
   statBlockValue: {
     fontSize: 18,
     fontFamily: displayFont,
@@ -355,11 +410,18 @@ const styles = StyleSheet.create({
     color: '#1B1B3A',
     marginBottom: 4,
   },
+  statBlockValueCompact: {
+    fontSize: 16,
+    marginBottom: 2,
+  },
   statBlockLabel: {
     fontSize: 13,
     fontFamily: displayFont,
     fontWeight: '500',
     color: C.muted,
+  },
+  statBlockLabelCompact: {
+    fontSize: 11.5,
   },
 
   menuCard: {
@@ -382,6 +444,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
   },
+  menuItemCompact: {
+    paddingVertical: 11,
+  },
   menuItemBorder: {
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
@@ -397,6 +462,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1B1B3A',
   },
+  menuItemLabelCompact: {
+    marginLeft: 12,
+    fontSize: 14,
+  },
   menuItemRight: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -408,20 +477,34 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: C.sub,
   },
+  menuItemValueCompact: {
+    fontSize: 13.5,
+    maxWidth: 150,
+  },
 
   logoutButton: {
     backgroundColor: C.white,
     borderRadius: 18,
-    paddingVertical: 18,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
     borderColor: 'rgba(216, 91, 80, 0.3)',
-    marginBottom: 20,
+  },
+  logoutFixedButton: {
+    position: 'absolute',
+    alignSelf: 'center',
+    minHeight: 44,
+    shadowColor: C.shadow,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 2,
   },
   logoutText: { fontSize: 16, fontFamily: displayFont, fontWeight: '700', color: colors.danger },
+  logoutTextCompact: { fontSize: 14 },
 
   // Modal styles
   modalContainer: { flex: 1, backgroundColor: C.bg },

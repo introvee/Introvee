@@ -248,6 +248,7 @@ create table if not exists public.user_settings (
   notifications_enabled boolean not null default true,
   sound_enabled boolean not null default true,
   haptics_enabled boolean not null default true,
+  donation_popup_enabled boolean not null default true,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now(),
   unique(user_id)

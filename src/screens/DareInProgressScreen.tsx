@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, AppState, Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,46 +13,16 @@ import { useProfileStore } from '../store/useProfileStore';
 type Props = NativeStackScreenProps<RootStackParamList, 'DareInProgress'>;
 
 const MOTIVATION_LINES = [
-  'Courage is waking up...',
-  'Your brave side is loading...',
-  'One step closer to confidence.',
-  'Small dare. Stronger you.',
-  'Keep breathing. Keep going.',
-  'This is how confidence begins.',
-  'You are stronger than the awkwardness.',
-  'Don’t overthink. Just move.',
-  'Your comfort zone is getting smaller.',
-  'A tiny action can change your day.',
-  'This moment is building you.',
-  'Stay steady. You’ve got this.',
-  'The brave version of you is here.',
-  'Confidence is made in moments like this.',
-  'You showed up. That matters.',
-  'Every dare makes you bolder.',
-  'Feel nervous. Do it anyway.',
-  'Your courage is growing quietly.',
-  'Today’s awkwardness is tomorrow’s confidence.',
-  'You are not stuck. You are practicing.',
-  'This is your level-up moment.',
-  'Bravery does not need to be loud.',
-  'One small win is still a win.',
-  'Push gently. Grow slowly.',
-  'You are becoming more confident.',
-  'Don’t quit before the magic happens.',
-  'A brave move is still brave, even if it feels small.',
-  'Your future self will thank you.',
-  'You are building social courage.',
-  'Keep going. The win is close.',
-  'This dare is training your confidence.',
-  'You are doing better than you think.',
-  'Stay calm. Take the step.',
-  'Growth feels awkward first.',
-  'You are unlocking a new version of yourself.',
-  'One dare at a time. One stronger you.',
-  'The nervous feeling will pass.',
-  'You are learning to show up.',
-  'Your confidence streak is starting.',
-  'Make this tiny moment count.'
+  'Take a breath...',
+  'Stay calm.',
+  'Just one step.',
+  'No pressure.',
+  'You can do this.',
+  'Keep it simple.',
+  'Pause. Breathe. Go.',
+  'Small step. Big progress.',
+  'Don’t overthink.',
+  'You’re doing fine.'
 ];
 
 const characterImage = require('../../assets/images/page-2.png');
@@ -66,35 +36,60 @@ export function DareInProgressScreen({ navigation, route }: Props) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [motivationIndex, setMotivationIndex] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isAppActive, setIsAppActive] = useState(AppState.currentState === 'active');
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const responsive = getProgressResponsiveStyles(width, height, insets.top, insets.bottom);
 
   useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      setIsAppActive(nextState === 'active');
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    if (!isAppActive) return;
+
     const stopwatch = setInterval(() => {
       setElapsedSeconds((current) => current + 1);
     }, 1000);
 
     return () => clearInterval(stopwatch);
-  }, []);
+  }, [isAppActive]);
 
   useEffect(() => {
+    if (!isAppActive) {
+      fadeAnim.stopAnimation();
+      return;
+    }
+
+    let fadeOutAnimation: Animated.CompositeAnimation | null = null;
+    let fadeInAnimation: Animated.CompositeAnimation | null = null;
     const motivationTimer = setInterval(() => {
-      Animated.timing(fadeAnim, {
+      fadeOutAnimation = Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 180,
         useNativeDriver: false
-      }).start(() => {
+      });
+      fadeOutAnimation.start(() => {
         setMotivationIndex((current) => (current + 1) % MOTIVATION_LINES.length);
-        Animated.timing(fadeAnim, {
+        fadeInAnimation = Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 220,
           useNativeDriver: false
-        }).start();
+        });
+        fadeInAnimation.start();
       });
     }, 3000);
 
-    return () => clearInterval(motivationTimer);
-  }, [fadeAnim]);
+    return () => {
+      clearInterval(motivationTimer);
+      fadeOutAnimation?.stop();
+      fadeInAnimation?.stop();
+      fadeAnim.stopAnimation();
+    };
+  }, [fadeAnim, isAppActive]);
 
   const stopwatchText = useMemo(() => formatTime(elapsedSeconds), [elapsedSeconds]);
 

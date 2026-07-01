@@ -53,7 +53,7 @@ export function PrivacyPolicyScreen() {
         <View style={styles.topInfo}>
           <Text style={styles.lastUpdated}>Last updated: June 29, 2026</Text>
           <Text style={styles.introText}>
-            Your privacy matters to us. Introvert App helps you build social confidence through daily dares, levels, stages, points, and progress tracking. This policy explains what we collect and how we use it.
+            Your privacy matters to us. Introvee helps you build social confidence through daily dares, levels, stages, points, and progress tracking. This policy explains what we collect and how we use it.
           </Text>
         </View>
 
@@ -78,7 +78,7 @@ export function PrivacyPolicyScreen() {
         <PolicySection 
           icon={Heart} 
           title="4. Age and Safety" 
-          content="Introvert App is designed for users who meet the required age limit. We care about your safety while performing social dares. Never complete a dare that feels unsafe, disrespectful, or uncomfortable." 
+          content="Introvee is designed for users aged 16 and above. We care about your safety while performing social dares. Never complete a dare that feels unsafe, disrespectful, uncomfortable, or not suitable for your situation." 
         />
 
         <PolicySection 
@@ -108,7 +108,7 @@ export function PrivacyPolicyScreen() {
         <PolicySection 
           icon={Mail} 
           title="9. Contact Us" 
-          content={"For privacy questions or data deletion requests, contact:\nsupport@introvertapp.com"} 
+          content={"For privacy questions or data deletion requests, contact:\nsupport@introvee.com"} 
         />
       </ScrollView>
     </View>

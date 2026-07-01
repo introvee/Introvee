@@ -15,6 +15,7 @@
     "dist-web-check",
     ".expo",
     ".ts-trace",
-    "node_modules"
+    "node_modules",
+    "supabase/functions"
   ]
 }

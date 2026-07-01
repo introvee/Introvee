@@ -142,3 +142,7 @@ BEGIN
   RETURN v_points_awarded;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Step 6: Add Home donation popup preference
+ALTER TABLE public.user_settings
+ADD COLUMN IF NOT EXISTS donation_popup_enabled BOOLEAN NOT NULL DEFAULT true;

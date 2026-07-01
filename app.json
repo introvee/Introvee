@@ -1,6 +1,5 @@
 {
   "expo": {
-
     "name": "Introvee",
     "slug": "introvert-app",
     "scheme": "introvee",
@@ -8,11 +7,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FAF8F3"
-    },
     "updates": {
       "enabled": false
     },
@@ -28,7 +22,15 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAF8F3"
       },
-      "package": "com.bravestep.app"
+      "package": "com.bravestep.app",
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -43,7 +45,39 @@
         "expo-image-picker",
         {
           "photosPermission": "Introvee can use a photo you choose to personalize your shared progress card.",
-          "cameraPermission": "Introvee can use your camera to add an optional photo to your shared progress card."
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Introvee needs photo library access to save your completed dare post.",
+          "savePhotosPermission": "Introvee needs permission to save your completed dare post."
+        }
+      ],
+      [
+        "react-native-share",
+        {
+          "ios": [
+            "instagram",
+            "whatsapp"
+          ],
+          "android": [
+            "com.instagram.android",
+            "com.whatsapp"
+          ]
+        }
+      ],
+      "expo-localization",
+      "expo-build-properties",
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FAF8F3",
+          "imageWidth": 200
         }
       ]
     ]

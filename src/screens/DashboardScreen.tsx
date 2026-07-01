@@ -1,14 +1,17 @@
-import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Alert, Animated, Image, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { ArrowRight, CheckCircle2, Flame, Heart, Sparkles } from 'lucide-react-native';
+import { ArrowRight, CheckCircle2, Flame, Heart, Sparkles, X } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getCompletedDareCount, getTodaysDareLog } from '../services/dareService';
-import { getTabBarReservedHeight } from '../constants/layout';
+import { getTabBarBottomOffset, getTabBarReservedHeight, TAB_BAR_BASE_HEIGHT } from '../constants/layout';
 import { getLevelTitle } from '../constants/levelTitles';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
+import { useSettingsStore } from '../store/useSettingsStore';
+import { DonationModal } from '../components/DonationModal';
 import type { MainTabParamList } from '../navigation/types';
 import type { UserDareLog } from '../types/dare';
 
@@ -39,32 +42,282 @@ const levelCovers: Record<number, number> = {
 
 const stageCount = 5;
 const swipeInset = 5;
+const donationPopupImage = require('../../assets/images/popup.png');
+const donationMascotSeenPrefix = 'introvee:donation-mascot-seen';
 
 export function DashboardScreen() {
   const navigation = useNavigation<Nav>();
+  const isFocused = useIsFocused();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
   const profile = useProfileStore((state) => state.profile);
+  const settings = useSettingsStore((state) => state.settings);
+  const fetchSettings = useSettingsStore((state) => state.fetchSettings);
   const [todaysLog, setTodaysLog] = useState<UserDareLog | null>(null);
   const [completedDares, setCompletedDares] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [showDonateMascot, setShowDonateMascot] = useState(false);
+  const [isDraggingMascot, setIsDraggingMascot] = useState(false);
+  const [donatePopupVisible, setDonatePopupVisible] = useState(false);
+  const [mascotDismissed, setMascotDismissed] = useState(false);
+  const [donationMascotCooldownPassed, setDonationMascotCooldownPassed] = useState(false);
+
+  const mascotSize = clamp(width * 0.18, 68, 86);
+  const mascotOverlayWidth = mascotSize;
+  const mascotOverlayHeight = mascotSize;
+  const mascotTop = clamp(height * 0.118, 88, 106);
+  const mascotRight = clamp(width * 0.012, 4, 10);
+  const initialMascotPosition = useMemo(
+    () => ({
+      x: Math.max(width - mascotOverlayWidth - mascotRight, 0),
+      y: mascotTop
+    }),
+    [mascotOverlayWidth, mascotRight, mascotTop, width]
+  );
+  const [mascotPosition, setMascotPosition] = useState(initialMascotPosition);
+  const mascotAnimatedPosition = useRef(new Animated.ValueXY(initialMascotPosition)).current;
+  const mascotPresence = useRef(new Animated.Value(0)).current;
+  const closeTargetPresence = useRef(new Animated.Value(0)).current;
+  const latestMascotPosition = useRef(initialMascotPosition);
+  const hasDraggedMascot = useRef(false);
+  const isMounted = useRef(true);
+  const donatePopupOpenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTargetSize = clamp(width * 0.14, 52, 60);
+  const closeTargetBottom = getTabBarReservedHeight(insets.bottom) - 8;
+  const closeTargetRect = useMemo(
+    () => ({
+      left: width / 2 - closeTargetSize / 2 - 14,
+      right: width / 2 + closeTargetSize / 2 + 14,
+      top: height - closeTargetBottom - closeTargetSize - 14,
+      bottom: height - closeTargetBottom + 14
+    }),
+    [closeTargetBottom, closeTargetSize, height, width]
+  );
+  const donationPopupEnabled = settings?.donation_popup_enabled ?? true;
+  const donationPopupSettingLoaded = settings !== null;
+  const loadedLevel = profile?.current_level;
+  const canShowDonationMascot =
+    donationPopupSettingLoaded &&
+    typeof loadedLevel === 'number' &&
+    loadedLevel >= 2 &&
+    donationPopupEnabled &&
+    isFocused &&
+    !mascotDismissed &&
+    donationMascotCooldownPassed;
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchSettings(user.id);
+    }
+  }, [fetchSettings, user?.id]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkDonationMascotCooldown() {
+      if (!user?.id || typeof loadedLevel !== 'number' || loadedLevel < 2) {
+        if (active) setDonationMascotCooldownPassed(false);
+        return;
+      }
+
+      const today = getLocalDateKey();
+      const lastSeen = await AsyncStorage.getItem(getDonationMascotSeenKey(user.id));
+      if (active) setDonationMascotCooldownPassed(lastSeen !== today);
+    }
+
+    checkDonationMascotCooldown().catch(() => {
+      if (active) setDonationMascotCooldownPassed(true);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [loadedLevel, user?.id]);
+
+  useEffect(() => {
+    if (donationPopupEnabled) {
+      setMascotDismissed(false);
+    }
+  }, [donationPopupEnabled]);
+
+  useEffect(() => {
+    if (showDonateMascot || isDraggingMascot) return;
+    latestMascotPosition.current = initialMascotPosition;
+    setMascotPosition(initialMascotPosition);
+    mascotAnimatedPosition.setValue(initialMascotPosition);
+  }, [initialMascotPosition, isDraggingMascot, mascotAnimatedPosition, showDonateMascot]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    if (canShowDonationMascot) {
+      timer = setTimeout(() => {
+        setShowDonateMascot(true);
+        Animated.spring(mascotPresence, {
+          toValue: 1,
+          useNativeDriver: true,
+          bounciness: 8,
+          speed: 12
+        }).start();
+      }, 1000);
+    } else {
+      mascotPresence.stopAnimation();
+      setShowDonateMascot(false);
+      setIsDraggingMascot(false);
+      closeTargetPresence.setValue(0);
+      mascotPresence.setValue(0);
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [canShowDonationMascot, closeTargetPresence, mascotPresence]);
+
+  useEffect(() => {
+    Animated.spring(closeTargetPresence, {
+      toValue: isDraggingMascot ? 1 : 0,
+      useNativeDriver: true,
+      bounciness: 6,
+      speed: 16
+    }).start();
+  }, [closeTargetPresence, isDraggingMascot]);
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+      if (donatePopupOpenTimer.current) {
+        clearTimeout(donatePopupOpenTimer.current);
+      }
+      mascotPresence.stopAnimation();
+      closeTargetPresence.stopAnimation();
+      mascotAnimatedPosition.stopAnimation();
+    };
+  }, [closeTargetPresence, mascotAnimatedPosition, mascotPresence]);
+
+  const dismissDonateMascot = useCallback(() => {
+    if (user?.id) {
+      AsyncStorage.setItem(getDonationMascotSeenKey(user.id), getLocalDateKey()).catch(() => undefined);
+    }
+    Animated.timing(mascotPresence, {
+      toValue: 0,
+      duration: 160,
+      useNativeDriver: true
+    }).start(() => {
+      if (!isMounted.current) return;
+      setMascotDismissed(true);
+      setDonationMascotCooldownPassed(false);
+      setShowDonateMascot(false);
+    });
+  }, [mascotPresence, user?.id]);
+
+  const openDonationPopup = useCallback(() => {
+    if (user?.id) {
+      AsyncStorage.setItem(getDonationMascotSeenKey(user.id), getLocalDateKey()).catch(() => undefined);
+    }
+    if (donatePopupOpenTimer.current) {
+      clearTimeout(donatePopupOpenTimer.current);
+    }
+    donatePopupOpenTimer.current = setTimeout(() => {
+      if (isMounted.current) setDonatePopupVisible(true);
+      donatePopupOpenTimer.current = null;
+    }, 80);
+    setDonationMascotCooldownPassed(false);
+  }, [user?.id]);
+
+  const mascotPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 3 || Math.abs(gesture.dy) > 3,
+        onPanResponderGrant: () => {
+          hasDraggedMascot.current = false;
+          mascotAnimatedPosition.stopAnimation((position) => {
+            latestMascotPosition.current = position;
+          });
+        },
+        onPanResponderMove: (_, gesture) => {
+          if (!hasDraggedMascot.current && (Math.abs(gesture.dx) > 3 || Math.abs(gesture.dy) > 3)) {
+            hasDraggedMascot.current = true;
+            setIsDraggingMascot(true);
+          }
+
+          const nextPosition = {
+            x: clamp(latestMascotPosition.current.x + gesture.dx, 0, Math.max(width - mascotOverlayWidth, 0)),
+            y: clamp(
+              latestMascotPosition.current.y + gesture.dy,
+              0,
+              Math.max(height - getTabBarReservedHeight(insets.bottom) - mascotOverlayHeight, 0)
+            )
+          };
+          mascotAnimatedPosition.setValue(nextPosition);
+        },
+        onPanResponderRelease: (_, gesture) => {
+          const finalPosition = {
+            x: clamp(latestMascotPosition.current.x + gesture.dx, 0, Math.max(width - mascotOverlayWidth, 0)),
+            y: clamp(
+              latestMascotPosition.current.y + gesture.dy,
+              0,
+              Math.max(height - getTabBarReservedHeight(insets.bottom) - mascotOverlayHeight, 0)
+            )
+          };
+
+          latestMascotPosition.current = finalPosition;
+          setMascotPosition(finalPosition);
+          mascotAnimatedPosition.setValue(finalPosition);
+          setIsDraggingMascot(false);
+
+          const releasedOverClose =
+            gesture.moveX >= closeTargetRect.left &&
+            gesture.moveX <= closeTargetRect.right &&
+            gesture.moveY >= closeTargetRect.top &&
+            gesture.moveY <= closeTargetRect.bottom;
+
+          if (hasDraggedMascot.current && releasedOverClose) {
+            dismissDonateMascot();
+            return;
+          }
+
+          if (!hasDraggedMascot.current) {
+            openDonationPopup();
+          }
+        },
+        onPanResponderTerminate: () => {
+          setIsDraggingMascot(false);
+          mascotAnimatedPosition.setValue(mascotPosition);
+        }
+      }),
+    [
+      closeTargetRect.bottom,
+      closeTargetRect.left,
+      closeTargetRect.right,
+      closeTargetRect.top,
+      dismissDonateMascot,
+      height,
+      insets.bottom,
+      mascotAnimatedPosition,
+      mascotOverlayHeight,
+      mascotOverlayWidth,
+      mascotPosition,
+      openDonationPopup,
+      width
+    ]
+  );
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
       async function loadDashboard() {
         if (!user || !profile) {
-          console.log('[Dashboard] No user or profile, skipping load', { user: !!user, profile: !!profile });
           setIsLoading(false);
           return;
         }
-        console.log('[Dashboard] Loading dashboard data for user:', user.id);
         setIsLoading(true);
         try {
           const timeout = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Dashboard load timed out after 10s')), 10000)
+            timeoutId = setTimeout(() => reject(new Error('Dashboard load timed out after 10s')), 10000)
           );
           const [dayLog, totalCompleted] = await Promise.race([
             Promise.all([
@@ -74,19 +327,20 @@ export function DashboardScreen() {
             timeout.then(() => { throw new Error('timeout'); })
           ]);
 
-          console.log('[Dashboard] Data loaded:', { dayLog: !!dayLog, totalCompleted });
           if (active) {
             setTodaysLog(dayLog);
             setCompletedDares(totalCompleted);
           }
         } catch (error) {
-          console.warn('[Dashboard] Error loading dashboard:', error);
-          // Don't block the UI — show dashboard with defaults
           if (active) {
             setTodaysLog(null);
             setCompletedDares(0);
           }
         } finally {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = undefined;
+          }
           if (active) setIsLoading(false);
         }
       }
@@ -94,6 +348,7 @@ export function DashboardScreen() {
       loadDashboard();
       return () => {
         active = false;
+        if (timeoutId) clearTimeout(timeoutId);
       };
     }, [user?.id, profile?.current_level, profile?.current_stage])
   );
@@ -109,8 +364,7 @@ export function DashboardScreen() {
   const currentLevel = clamp(profile?.current_level ?? 1, 1, 20);
   const stageInLevel = clamp(profile?.current_stage ?? 1, 1, 5);
   const completedStagesInLevel = getCompletedStagesInLevel(stageInLevel, currentLevel, completedDares, todaysLog);
-  const totalCompletedStages = clamp(completedDares, 0, 100);
-  const currentDay = Math.min(totalCompletedStages + 1, 100);
+  const currentDay = clamp(profile?.current_day ?? 1, 1, 100);
   const confidence = Math.min(Math.max(Math.round((completedDares / 100) * 100), 0), 100);
   const responsive = getDashboardResponsiveStyles(width, height, insets.bottom);
 
@@ -119,6 +373,8 @@ export function DashboardScreen() {
       <ScrollView
         style={[styles.container, responsive.container]}
         contentContainerStyle={[styles.content, responsive.content]}
+        scrollEnabled={responsive.scrollEnabled}
+        bounces={responsive.scrollEnabled}
         showsVerticalScrollIndicator={false}
       >
           <View style={[styles.greetingBlock, responsive.greetingBlock]}>
@@ -130,7 +386,9 @@ export function DashboardScreen() {
                 {profile?.name || 'Friend'}
               </Text>
             </View>
-            <Text style={styles.subtitle}>You're doing great. One step at a time.</Text>
+            <Text style={[styles.subtitle, responsive.subtitle]} numberOfLines={1} adjustsFontSizeToFit>
+              You're doing great. One step at a time.
+            </Text>
           </View>
 
         <View style={[styles.levelCard, responsive.levelCard]}>
@@ -143,9 +401,11 @@ export function DashboardScreen() {
                 {getLevelTitle(currentLevel)}
               </Text>
             </View>
-            <Text style={[styles.dayText, responsive.dayText]} numberOfLines={1} adjustsFontSizeToFit>
-              Day {currentDay}
-            </Text>
+            <View style={[styles.dayBadge, responsive.dayBadge]}>
+              <Text style={[styles.dayText, responsive.dayText]} numberOfLines={1} adjustsFontSizeToFit>
+                Day {currentDay}
+              </Text>
+            </View>
           </View>
           <View style={[styles.coverFrame, responsive.coverFrame]}>
             <Image source={levelCovers[currentLevel]} style={styles.cover} resizeMode="cover" />
@@ -169,17 +429,17 @@ export function DashboardScreen() {
           ].map((stat, i, arr) => (
             <View key={stat.label} style={[styles.statCol, i < arr.length - 1 && styles.statColBorder]}>
               <View style={styles.statIcon}>{stat.icon}</View>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
+              <Text style={[styles.statValue, responsive.statValue]} numberOfLines={1} adjustsFontSizeToFit>{stat.value}</Text>
+              <Text style={[styles.statLabel, responsive.statLabel]} numberOfLines={1}>{stat.label}</Text>
             </View>
           ))}
         </View>
 
         <View style={[styles.goalCard, responsive.goalCard]}>
           <View style={styles.goalLinesRow}>
-            <Text style={[styles.goalTextBlack, responsive.goalTextBlack]}>Became an</Text>
+            <Text style={[styles.goalTextBlack, responsive.goalTextBlack]}>Build</Text>
             <View style={styles.highlightBlock}>
-              <Text style={[styles.highlightBlockText, responsive.highlightBlockText]}>extrovert</Text>
+              <Text style={[styles.highlightBlockText, responsive.highlightBlockText]}>confidence</Text>
             </View>
             <Text style={[styles.goalTextBlack, responsive.goalTextBlack]}>in</Text>
             <View style={styles.highlightBlock}>
@@ -188,6 +448,62 @@ export function DashboardScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {showDonateMascot && (
+        <Animated.View
+          style={[
+            styles.donateMascotOverlay,
+            {
+              width: mascotOverlayWidth,
+              height: mascotOverlayHeight,
+              opacity: mascotPresence,
+              transform: [
+                ...mascotAnimatedPosition.getTranslateTransform(),
+                {
+                  scale: mascotPresence.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.82, 1]
+                  })
+                }
+              ]
+            }
+          ]}
+          {...mascotPanResponder.panHandlers}
+        >
+          <Image
+            source={donationPopupImage}
+            style={[styles.donateMascotImage, { width: mascotSize, height: mascotSize }]}
+            resizeMode="contain"
+          />
+        </Animated.View>
+      )}
+
+      <Animated.View
+        pointerEvents={isDraggingMascot ? 'auto' : 'none'}
+        style={[
+          styles.closeDropTarget,
+          {
+            width: closeTargetSize,
+            height: closeTargetSize,
+            borderRadius: closeTargetSize / 2,
+            bottom: closeTargetBottom,
+            marginLeft: -closeTargetSize / 2,
+            opacity: closeTargetPresence,
+            transform: [
+              {
+                scale: closeTargetPresence.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.75, 1]
+                })
+              }
+            ]
+          }
+        ]}
+      >
+        <X size={26} color="#FFFFFF" strokeWidth={2.5} />
+      </Animated.View>
+
+      <DonationModal visible={donatePopupVisible} onClose={() => setDonatePopupVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -241,6 +557,7 @@ function SwipeToStart({
   const translateX = useRef(new Animated.Value(0)).current;
   const latestX = useRef(0);
   const didComplete = useRef(false);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pillWidth, setPillWidth] = useState(0);
   const maxDrag = Math.max(pillWidth - thumbSize - swipeInset * 2, 0);
   const threshold = maxDrag * 0.74;
@@ -266,9 +583,20 @@ function SwipeToStart({
       useNativeDriver: true
     }).start(() => {
       onComplete();
-      setTimeout(resetThumb, 240);
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => {
+        resetTimer.current = null;
+        resetThumb();
+      }, 240);
     });
   }, [maxDrag, onComplete, resetThumb, translateX]);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+      translateX.stopAnimation();
+    };
+  }, [translateX]);
 
   const panResponder = useMemo(
     () =>
@@ -326,35 +654,49 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function getDonationMascotSeenKey(userId: string) {
+  return `${donationMascotSeenPrefix}:${userId}`;
+}
+
+function getLocalDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function getDashboardResponsiveStyles(width: number, height: number, bottomInset: number) {
   const narrowScreen = width <= 360;
+  const compactHeight = height < 820;
+  const veryCompactHeight = height < 740;
   const horizontalPadding = clamp(width * 0.055, narrowScreen ? 16 : 18, 20);
+  const bottomReserve = TAB_BAR_BASE_HEIGHT + getTabBarBottomOffset(bottomInset) + (compactHeight ? 10 : 16);
   
   // Compact Level Card
-  const cardPadding = clamp(height * 0.025, 16, 22);
-  const levelFontSize = clamp(width * 0.1, 38, 48);
-  const titleFontSize = clamp(width * 0.038, 15, 18);
-  const dayFontSize = clamp(width * 0.075, narrowScreen ? 25 : 27, 34);
+  const cardPadding = clamp(height * (compactHeight ? 0.017 : 0.025), veryCompactHeight ? 11 : 14, compactHeight ? 16 : 22);
+  const levelFontSize = clamp(width * (compactHeight ? 0.087 : 0.1), compactHeight ? 32 : 38, compactHeight ? 42 : 48);
+  const titleFontSize = clamp(width * 0.036, compactHeight ? 13 : 15, compactHeight ? 16 : 18);
+  const dayFontSize = clamp(width * 0.05, compactHeight ? 17 : 20, compactHeight ? 21 : 24);
   
   // Cover Image
-  const coverHeight = clamp(height * 0.24, 150, 200);
+  const coverHeight = clamp(height * (veryCompactHeight ? 0.15 : compactHeight ? 0.17 : 0.24), veryCompactHeight ? 104 : 124, compactHeight ? 150 : 200);
   
   // Swipe Pill
-  const swipeHeight = clamp(height * 0.065, 50, 58);
-  const thumbSize = clamp(width * 0.11, 42, 50);
+  const swipeHeight = clamp(height * (compactHeight ? 0.055 : 0.065), compactHeight ? 44 : 50, compactHeight ? 50 : 58);
+  const thumbSize = clamp(width * 0.105, compactHeight ? 38 : 42, compactHeight ? 44 : 50);
   
   // Stats
-  const statHeight = clamp(height * 0.09, 74, 88);
-  const statGap = clamp(width * 0.025, 8, 10);
-  const statValueFontSize = clamp(width * 0.065, narrowScreen ? 20 : 22, 25);
+  const statValueFontSize = clamp(width * 0.058, compactHeight ? 18 : narrowScreen ? 20 : 22, compactHeight ? 22 : 25);
   const statTitleFontSize = clamp(width * 0.033, 11, 12);
 
   // Layout spacing
-  const greetingBottom = clamp(height * 0.015, 10, 16);
-  const levelCardBottom = clamp(height * 0.016, 12, 18);
-  const statsBottom = clamp(height * 0.012, 8, 14);
+  const greetingBottom = clamp(height * (compactHeight ? 0.008 : 0.015), compactHeight ? 5 : 10, compactHeight ? 8 : 16);
+  const levelCardBottom = clamp(height * (compactHeight ? 0.009 : 0.016), compactHeight ? 7 : 12, compactHeight ? 10 : 18);
+  const statsBottom = clamp(height * (compactHeight ? 0.008 : 0.012), compactHeight ? 6 : 8, compactHeight ? 9 : 14);
 
   return {
+    scrollEnabled: veryCompactHeight,
     container: {
       flex: 1
     },
@@ -362,8 +704,8 @@ function getDashboardResponsiveStyles(width: number, height: number, bottomInset
       flexGrow: 1,
       justifyContent: 'space-between' as const,
       paddingHorizontal: horizontalPadding,
-      paddingTop: clamp(height * 0.02, 14, 22),
-      paddingBottom: getTabBarReservedHeight(bottomInset)
+      paddingTop: clamp(height * (compactHeight ? 0.006 : 0.02), compactHeight ? 5 : 14, compactHeight ? 8 : 22),
+      paddingBottom: bottomReserve
     },
     topRow: { marginBottom: greetingBottom },
     greetingBlock: { marginBottom: greetingBottom },
@@ -374,6 +716,11 @@ function getDashboardResponsiveStyles(width: number, height: number, bottomInset
     greetingName: {
       fontSize: clamp(width * 0.085, 28, 34),
       lineHeight: clamp(width * 0.09, 32, 38)
+    },
+    subtitle: {
+      fontSize: clamp(width * 0.035, compactHeight ? 12 : 14, 15),
+      lineHeight: clamp(width * 0.047, compactHeight ? 16 : 20, 21),
+      marginTop: compactHeight ? 2 : 5
     },
     levelCard: {
       paddingTop: cardPadding,
@@ -391,15 +738,20 @@ function getDashboardResponsiveStyles(width: number, height: number, bottomInset
     },
     dayText: {
       fontSize: dayFontSize,
-      lineHeight: dayFontSize * 1.05
+      lineHeight: dayFontSize * 1.28
+    },
+    dayBadge: {
+      minWidth: compactHeight ? 68 : narrowScreen ? 78 : 88,
+      paddingHorizontal: narrowScreen ? 8 : 10,
+      paddingVertical: compactHeight ? 3 : narrowScreen ? 4 : 5
     },
     coverFrame: {
       height: coverHeight,
-      marginTop: 10
+      marginTop: compactHeight ? 7 : 10
     },
     progressBlock: {
-      marginTop: 10,
-      marginBottom: 8
+      marginTop: compactHeight ? 6 : 10,
+      marginBottom: compactHeight ? 5 : 8
     },
     swipePill: {
       height: swipeHeight
@@ -408,18 +760,14 @@ function getDashboardResponsiveStyles(width: number, height: number, bottomInset
       width: thumbSize
     },
     swipeText: {
-      fontSize: clamp(width * 0.038, 13, 15),
-      lineHeight: clamp(width * 0.05, 18, 20),
+      fontSize: clamp(width * 0.036, compactHeight ? 12 : 13, compactHeight ? 14 : 15),
+      lineHeight: clamp(width * 0.047, compactHeight ? 16 : 18, compactHeight ? 18 : 20),
       paddingLeft: thumbSize + 8
     },
     combinedStatsCard: {
       marginTop: 0,
-      marginBottom: statsBottom
-    },
-    statCard: {
-      height: statHeight,
-      borderRadius: 22,
-      paddingHorizontal: narrowScreen ? 6 : 8
+      marginBottom: statsBottom,
+      paddingVertical: compactHeight ? 10 : 18
     },
     statTitle: {
       fontSize: statTitleFontSize,
@@ -430,6 +778,10 @@ function getDashboardResponsiveStyles(width: number, height: number, bottomInset
       fontSize: statValueFontSize,
       lineHeight: statValueFontSize + 4
     },
+    statLabel: {
+      fontSize: clamp(width * 0.03, 10, 11),
+      lineHeight: clamp(width * 0.038, 12, 14)
+    },
     statIconSize: clamp(width * 0.055, 18, 21),
     fire: {
       fontSize: clamp(width * 0.05, 17, 20),
@@ -437,17 +789,17 @@ function getDashboardResponsiveStyles(width: number, height: number, bottomInset
     },
     goalCard: {
       marginTop: 0,
-      minHeight: clamp(height * 0.07, 58, 68),
-      paddingVertical: 10,
+      minHeight: clamp(height * (compactHeight ? 0.055 : 0.07), compactHeight ? 44 : 58, compactHeight ? 52 : 68),
+      paddingVertical: compactHeight ? 7 : 10,
       paddingHorizontal: clamp(width * 0.04, 16, 24)
     },
     goalTextBlack: {
-      fontSize: clamp(width * 0.04, 15, 18),
-      lineHeight: clamp(width * 0.05, 19, 23)
+      fontSize: clamp(width * 0.038, compactHeight ? 13 : 15, compactHeight ? 16 : 18),
+      lineHeight: clamp(width * 0.047, compactHeight ? 17 : 19, compactHeight ? 21 : 23)
     },
     highlightBlockText: {
-      fontSize: clamp(width * 0.04, 15, 18),
-      lineHeight: clamp(width * 0.05, 19, 23)
+      fontSize: clamp(width * 0.038, compactHeight ? 13 : 15, compactHeight ? 16 : 18),
+      lineHeight: clamp(width * 0.047, compactHeight ? 17 : 19, compactHeight ? 21 : 23)
     }
   };
 }
@@ -533,7 +885,8 @@ const styles = StyleSheet.create({
   },
   levelHeaderCopy: {
     flex: 1,
-    minWidth: 0
+    minWidth: 0,
+    paddingRight: 4
   },
   levelNumber: {
     color: poster.text,
@@ -556,15 +909,22 @@ const styles = StyleSheet.create({
   },
   dayText: {
     color: '#000000',
-    fontSize: 28,
-    lineHeight: 30,
+    fontSize: 22,
+    lineHeight: 28,
     fontFamily: displayFont,
     fontWeight: '800',
-    letterSpacing: -0.5,
+    letterSpacing: 0,
     textAlign: 'right',
-    flexShrink: 0,
-    maxWidth: '38%',
     zIndex: 2
+  },
+  dayBadge: {
+    minWidth: 88,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
   },
   coverFrame: {
     width: '100%',
@@ -741,6 +1101,30 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(0,0,0,0.05)'
+  },
+  donateMascotOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 20,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  donateMascotImage: {
+    flexShrink: 0
+  },
+  closeDropTarget: {
+    position: 'absolute',
+    left: '50%',
+    zIndex: 25,
+    backgroundColor: 'rgba(17,17,17,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6
   },
   goalLinesRow: {
     flexDirection: 'row',

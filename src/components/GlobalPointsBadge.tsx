@@ -19,15 +19,17 @@ export function GlobalPointsBadge() {
     if (profile?.total_points !== undefined && displayPoints === 0) {
       setDisplayPoints(profile.total_points);
     }
-  }, [profile?.total_points]);
+  }, [displayPoints, profile?.total_points]);
 
   // Handle pop animation and update display points
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let animation: Animated.CompositeAnimation | null = null;
     if (badgePopTrigger > 0) {
       // Small delay to sync with the end of flying animation
-      setTimeout(() => {
+      timer = setTimeout(() => {
         setDisplayPoints(profile?.total_points || 0);
-        Animated.sequence([
+        animation = Animated.sequence([
           Animated.timing(scale, {
             toValue: 1.15,
             duration: 150,
@@ -39,10 +41,15 @@ export function GlobalPointsBadge() {
             tension: 50,
             useNativeDriver: true
           })
-        ]).start();
+        ]);
+        animation.start();
       }, 50);
     }
-  }, [badgePopTrigger]);
+    return () => {
+      if (timer) clearTimeout(timer);
+      animation?.stop();
+    };
+  }, [badgePopTrigger, profile?.total_points, scale]);
 
   if (!profile) return null;
 

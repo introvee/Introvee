@@ -12,9 +12,7 @@ export default function App() {
   const { bootstrap, isBootstrapping } = useAuthStore();
 
   useEffect(() => {
-    bootstrap().catch((error) => {
-      console.warn('Could not restore Supabase session', error);
-    });
+    bootstrap().catch(() => undefined);
   }, [bootstrap]);
 
   if (isBootstrapping) {

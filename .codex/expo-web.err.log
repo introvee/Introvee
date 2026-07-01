@@ -1,0 +1,244 @@
+Error: Cannot find module 'expo-build-properties'
+Require stack:
+- D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\plugin\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\app.plugin.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\load.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\detectDevClient.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\resolveOptions.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\bin\cli
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\bin\cli
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+    at Function._load (node:internal/modules/cjs/loader:1211:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\plugin\build\index.js:28:33)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\app.plugin.js:2:18)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at loadModuleSync (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\load.js:352:14)
+    at resolveConfigPluginFunctionWithInfo (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\utils\plugin-resolver.js:138:49)
+    at resolveConfigPluginFunction (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\utils\plugin-resolver.js:126:7)
+    at withStaticPlugin (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withStaticPlugin.js:85:70)
+    at D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withPlugins.js:30:84
+    at Array.reduce (<anonymous>)
+    at withPlugins (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withPlugins.js:30:18)
+    at withConfigPlugins (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\plugins\withConfigPlugins.js:35:47)
+    at fillAndReturnConfig (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js:229:78)
+    at getConfig (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js:286:10)
+    at getFaviconFromExpoConfigAsync (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\export\favicon.js:98:106)
+    at FaviconMiddleware.handleRequestAsync (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\FaviconMiddleware.js:29:75)
+    at internalMiddleware (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ExpoMiddleware.js:90:35)
+    at middleware (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ExpoMiddleware.js:108:20)
+    at call (D:\Go2clients\Introvert App\Introvert App\node_modules\connect\index.js:239:7)
+    at next (D:\Go2clients\Introvert App\Introvert App\node_modules\connect\index.js:183:5)
+    at SendStream.error (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ServeStaticMiddleware.js:70:17)
+    at SendStream.emit (node:events:518:28)
+    at SendStream.error (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:270:17)
+    at SendStream.onStatError (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:417:12)
+    at onstat (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:721:26)
+    at FSReqCallback.oncomplete (node:fs:198:21)
+Error: Cannot find module 'expo-build-properties'
+Require stack:
+- D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\plugin\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\app.plugin.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\load.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\detectDevClient.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\resolveOptions.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\bin\cli
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\bin\cli
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+    at Function._load (node:internal/modules/cjs/loader:1211:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\plugin\build\index.js:28:33)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\app.plugin.js:2:18)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at loadModuleSync (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\load.js:352:14)
+    at resolveConfigPluginFunctionWithInfo (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\utils\plugin-resolver.js:138:49)
+    at resolveConfigPluginFunction (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\utils\plugin-resolver.js:126:7)
+    at withStaticPlugin (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withStaticPlugin.js:85:70)
+    at D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withPlugins.js:30:84
+    at Array.reduce (<anonymous>)
+    at withPlugins (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withPlugins.js:30:18)
+    at withConfigPlugins (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\plugins\withConfigPlugins.js:35:47)
+    at fillAndReturnConfig (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js:229:78)
+    at getConfig (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js:286:10)
+    at getFaviconFromExpoConfigAsync (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\export\favicon.js:98:106)
+    at FaviconMiddleware.handleRequestAsync (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\FaviconMiddleware.js:29:75)
+    at internalMiddleware (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ExpoMiddleware.js:90:35)
+    at middleware (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ExpoMiddleware.js:108:20)
+    at call (D:\Go2clients\Introvert App\Introvert App\node_modules\connect\index.js:239:7)
+    at next (D:\Go2clients\Introvert App\Introvert App\node_modules\connect\index.js:183:5)
+    at SendStream.error (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ServeStaticMiddleware.js:70:17)
+    at SendStream.emit (node:events:518:28)
+    at SendStream.error (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:270:17)
+    at SendStream.onStatError (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:417:12)
+    at onstat (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:721:26)
+    at FSReqCallback.oncomplete (node:fs:198:21)
+Error: Cannot find module 'expo-build-properties'
+Require stack:
+- D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\plugin\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\app.plugin.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\load.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\detectDevClient.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\resolveOptions.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\bin\cli
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\bin\cli
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+    at Function._load (node:internal/modules/cjs/loader:1211:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\plugin\build\index.js:28:33)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\app.plugin.js:2:18)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at loadModuleSync (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\load.js:352:14)
+    at resolveConfigPluginFunctionWithInfo (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\utils\plugin-resolver.js:138:49)
+    at resolveConfigPluginFunction (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\utils\plugin-resolver.js:126:7)
+    at withStaticPlugin (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withStaticPlugin.js:85:70)
+    at D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withPlugins.js:30:84
+    at Array.reduce (<anonymous>)
+    at withPlugins (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withPlugins.js:30:18)
+    at withConfigPlugins (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\plugins\withConfigPlugins.js:35:47)
+    at fillAndReturnConfig (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js:229:78)
+    at getConfig (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js:286:10)
+    at getFaviconFromExpoConfigAsync (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\export\favicon.js:98:106)
+    at FaviconMiddleware.handleRequestAsync (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\FaviconMiddleware.js:29:75)
+    at internalMiddleware (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ExpoMiddleware.js:90:35)
+    at middleware (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ExpoMiddleware.js:108:20)
+    at call (D:\Go2clients\Introvert App\Introvert App\node_modules\connect\index.js:239:7)
+    at next (D:\Go2clients\Introvert App\Introvert App\node_modules\connect\index.js:183:5)
+    at SendStream.error (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ServeStaticMiddleware.js:70:17)
+    at SendStream.emit (node:events:518:28)
+    at SendStream.error (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:270:17)
+    at SendStream.onStatError (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:417:12)
+    at onstat (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:721:26)
+    at FSReqCallback.oncomplete (node:fs:198:21)
+Error: Cannot find module 'expo-build-properties'
+Require stack:
+- D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\plugin\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\app.plugin.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\load.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\detectDevClient.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\resolveOptions.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\index.js
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\bin\cli
+- D:\Go2clients\Introvert App\Introvert App\node_modules\expo\bin\cli
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+    at Function._load (node:internal/modules/cjs/loader:1211:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\plugin\build\index.js:28:33)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\Go2clients\Introvert App\Introvert App\node_modules\react-native-share\app.plugin.js:2:18)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at loadModuleSync (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\require-utils\build\load.js:352:14)
+    at resolveConfigPluginFunctionWithInfo (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\utils\plugin-resolver.js:138:49)
+    at resolveConfigPluginFunction (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\utils\plugin-resolver.js:126:7)
+    at withStaticPlugin (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withStaticPlugin.js:85:70)
+    at D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withPlugins.js:30:84
+    at Array.reduce (<anonymous>)
+    at withPlugins (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config-plugins\build\plugins\withPlugins.js:30:18)
+    at withConfigPlugins (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\plugins\withConfigPlugins.js:35:47)
+    at fillAndReturnConfig (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js:229:78)
+    at getConfig (D:\Go2clients\Introvert App\Introvert App\node_modules\@expo\config\build\Config.js:286:10)
+    at getFaviconFromExpoConfigAsync (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\export\favicon.js:98:106)
+    at FaviconMiddleware.handleRequestAsync (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\FaviconMiddleware.js:29:75)
+    at internalMiddleware (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ExpoMiddleware.js:90:35)
+    at middleware (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ExpoMiddleware.js:108:20)
+    at call (D:\Go2clients\Introvert App\Introvert App\node_modules\connect\index.js:239:7)
+    at next (D:\Go2clients\Introvert App\Introvert App\node_modules\connect\index.js:183:5)
+    at SendStream.error (D:\Go2clients\Introvert App\Introvert App\node_modules\expo\node_modules\@expo\cli\build\src\start\server\middleware\ServeStaticMiddleware.js:70:17)
+    at SendStream.emit (node:events:518:28)
+    at SendStream.error (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:270:17)
+    at SendStream.onStatError (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:417:12)
+    at onstat (D:\Go2clients\Introvert App\Introvert App\node_modules\send\index.js:721:26)
+    at FSReqCallback.oncomplete (node:fs:198:21)

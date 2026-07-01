@@ -1,0 +1,22 @@
+
+> bravestep@1.0.0 web
+> expo start --web --port 8081
+
+env: load .env
+env: export EXPO_PUBLIC_AUTH_REDIRECT_URL EXPO_PUBLIC_SUPABASE_ANON_KEY EXPO_PUBLIC_SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY
+Starting project at D:\Go2clients\Introvert App\Introvert App
+Starting Metro Bundler
+
+Waiting on http://localhost:8081
+1 package may need updating. Run npx expo install --check for details.
+Logs for your project will appear below.
+Android Bundled 4369ms node_modules\expo\AppEntry.js (2964 modules)
+ WARN  Due to changes in Androids permission requirements, Expo Go can no longer provide full access to the media library. To test the full functionality of this module, you can create a development build. https://docs.expo.dev/develop/development-builds/create-a-build
+ LOG  [Auth] State changed: INITIAL_SESSION
+ LOG  [Bootstrap] Checking for existing session...
+ LOG  [Bootstrap] No session found
+ LOG  [Dashboard] Loading dashboard data for user: dev-bypass-user
+ WARN  [Dashboard] Error loading dashboard: {"code": "22P02", "details": null, "hint": null, "message": "invalid input syntax for type uuid: \"dev-bypass-user\""}
+ WARN  Error fetching settings, using local fallback: {"code": "PGRST205", "details": null, "hint": "Perhaps you meant the table 'public.user_dare_logs'", "message": "Could not find the table 'public.user_settings' in the schema cache"}
+ LOG  [Dashboard] Loading dashboard data for user: dev-bypass-user
+ WARN  [Dashboard] Error loading dashboard: {"message": ""}

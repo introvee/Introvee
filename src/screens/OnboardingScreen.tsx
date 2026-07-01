@@ -69,12 +69,6 @@ export function OnboardingScreen() {
 
   async function pickAvatar() {
     try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert('Photo access needed', 'Allow photo access to choose a profile image.');
-        return;
-      }
-
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: true,

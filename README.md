@@ -31,13 +31,16 @@ https://tamdbugffrsearuizaqm.supabase.co/auth/v1/callback
 
 ```text
 bravestep://auth/callback
-http://localhost:8081
-http://localhost:8082
-http://localhost:8083
-http://localhost:8084
+https://introvee.vercel.app/
 ```
 
-Use the localhost URL that matches the Expo web port shown in your terminal.
+For production web, set the Supabase Site URL to:
+
+```text
+https://introvee.vercel.app/
+```
+
+For local Expo web testing, you can temporarily add the localhost URL shown in your terminal to Supabase Redirect URLs.
 
 6. Add these environment variables before starting Expo:
 

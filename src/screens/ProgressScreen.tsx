@@ -22,11 +22,13 @@ import {
 } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fonts } from '../constants/fonts';
-import { getTabBarReservedHeight } from '../constants/layout';
+import { getTabBarBottomOffset, TAB_BAR_BASE_HEIGHT } from '../constants/layout';
 import { getLevelTitle } from '../constants/levelTitles';
+import { clamp, getResponsivePageMetrics } from '../constants/responsive';
 import { getBadgeCount } from '../services/progressService';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
+import { DonationModal } from '../components/DonationModal';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -52,6 +54,8 @@ const sampleTitles: Record<number, string> = {
   9: 'Call instead of text',
   10: 'Small intro'
 };
+
+const donationMascot = require('../../assets/images/donate-mascot.png');
 
 // ── Circular progress ring ─────────────────────────────────────────────────────
 function CircularProgress({ percent, size }: { percent: number; size: number }) {
@@ -93,17 +97,28 @@ function CircularProgress({ percent, size }: { percent: number; size: number }) 
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 export function ProgressScreen() {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const profile = useProfileStore((s) => s.profile);
   const [badgeCount, setBadgeCount] = useState(0);
   const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
   const [hasInitializedExpandedLevel, setHasInitializedExpandedLevel] = useState(false);
+  const [donationModalVisible, setDonationModalVisible] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    getBadgeCount(user.id).then(setBadgeCount).catch(() => setBadgeCount(0));
+    let active = true;
+    getBadgeCount(user.id)
+      .then((count) => {
+        if (active) setBadgeCount(count);
+      })
+      .catch(() => {
+        if (active) setBadgeCount(0);
+      });
+    return () => {
+      active = false;
+    };
   }, [user?.id]);
 
   // Set default expanded level once profile loads
@@ -120,9 +135,13 @@ export function ProgressScreen() {
   const completedStages = completedLevels * 5 + Math.max(profile.current_stage - 1, 0);
   const progressPct = Math.min(Math.round((completedStages / 100) * 100), 99);
 
-  const hPad = width < 375 ? 16 : 20;
-  const ringSize = width < 375 ? 100 : 116;
-
+  const metrics = getResponsivePageMetrics(width, height);
+  const hPad = metrics.horizontalPadding;
+  const compact = width < 390 || height < 780;
+  const veryCompact = height < 760;
+  const ringSize = clamp(width * (veryCompact ? 0.2 : compact ? 0.22 : 0.28), veryCompact ? 70 : compact ? 78 : 100, width >= 768 ? 132 : 116);
+  const topGap = veryCompact ? 7 : compact ? 9 : 16;
+  const tabBarVisibleReserve = TAB_BAR_BASE_HEIGHT + getTabBarBottomOffset(insets.bottom) + 8;
   const stats = [
     { icon: <BarChart2 size={16} color="rgba(255,255,255,0.7)" strokeWidth={1.8} />, value: profile.current_level, label: 'Level' },
     { icon: <Flag size={16} color="rgba(255,255,255,0.7)" strokeWidth={1.8} />, value: `${profile.current_stage} / 5`, label: 'Stage' },
@@ -177,38 +196,48 @@ export function ProgressScreen() {
     setExpandedLevel((prev) => (prev === levelNumber ? null : levelNumber));
   };
 
+  const openDonationModal = () => {
+    setDonationModalVisible(true);
+  };
+
+  const closeDonationModal = () => {
+    setDonationModalVisible(false);
+  };
+
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       {/* ── Fixed Top Content ────────────────────────────────── */}
-      <View style={[s.topContent, { paddingHorizontal: hPad }]}>
+      <View style={[s.topContent, { paddingHorizontal: hPad, gap: topGap, maxWidth: metrics.maxWidth, alignSelf: 'center', width: '100%', paddingTop: veryCompact ? 8 : compact ? 10 : 14 }]}>
         {/* Header */}
         <View style={s.header}>
           <View style={s.headerLeft}>
-            <Text style={s.headerGreeting}>Hi {profile.name || 'Alex'} 👋</Text>
+          <Text style={[s.headerGreeting, { fontSize: metrics.bodySize }]} numberOfLines={1} adjustsFontSizeToFit>
+            Hi {profile.name || 'Alex'} 👋
+          </Text>
           </View>
         </View>
 
         {/* Title row */}
         <View style={s.titleRow}>
-          <Text style={s.pageTitle}>Progress</Text>
-          <View style={s.analyticsBtn}>
+          <Text style={[s.pageTitle, { fontSize: metrics.headerTitleSize }]}>Progress</Text>
+          <View style={[s.analyticsBtn, { width: compact ? 34 : 36, height: compact ? 34 : 36 }]}>
             <BarChart2 size={15} color={C.text} strokeWidth={1.9} />
           </View>
         </View>
 
         {/* Stats card */}
-        <View style={s.statsCard}>
+        <View style={[s.statsCard, { paddingVertical: veryCompact ? 10 : compact ? 12 : 18 }]}>
           {stats.map((stat, i) => (
             <View key={stat.label} style={[s.statCol, i < stats.length - 1 && s.statColBorder]}>
               <View style={s.statIcon}>{stat.icon}</View>
-              <Text style={s.statValue}>{stat.value}</Text>
+              <Text style={[s.statValue, { fontSize: clamp(width * 0.052, 18, 21) }]} numberOfLines={1} adjustsFontSizeToFit>{stat.value}</Text>
               <Text style={s.statLabel}>{stat.label}</Text>
             </View>
           ))}
         </View>
 
         {/* Progress card */}
-        <View style={s.progressCard}>
+        <View style={[s.progressCard, { paddingHorizontal: veryCompact ? 12 : compact ? 14 : 20, paddingVertical: veryCompact ? 10 : compact ? 14 : 24 }]}>
           <View style={s.ringWrap}>
             <CircularProgress percent={progressPct} size={ringSize} />
             <Text style={[s.ringPct, { fontSize: ringSize * 0.21 }]} pointerEvents="none">
@@ -216,23 +245,70 @@ export function ProgressScreen() {
               <Text style={[s.ringPctSuffix, { fontSize: ringSize * 0.13 }]}>%</Text>
             </Text>
           </View>
-          <View style={s.progressTextBlock}>
-            <Text style={s.motiveCopy}>Confidence Level</Text>
+          <View style={[s.progressTextBlock, { paddingLeft: veryCompact ? 16 : 22 }]}>
+            <Text style={[s.motiveCopy, { fontSize: clamp(width * 0.05, 18, 24), lineHeight: clamp(width * 0.064, 24, 30) }]} numberOfLines={2} adjustsFontSizeToFit>
+              Confidence Level
+            </Text>
           </View>
         </View>
 
-        <Text style={s.sectionTitle}>Your Path</Text>
       </View>
 
-      {/* ── Scrollable Path Container (Accordion) ──────────────── */}
-      <View style={[s.pathContainerWrapper, { marginHorizontal: hPad, paddingBottom: getTabBarReservedHeight(insets.bottom) }]}>
+      {/* ── Path Section ───────────────────────────────────────── */}
+      <View
+        style={[
+          s.pathContainerWrapper,
+          {
+            paddingBottom: tabBarVisibleReserve,
+            width: Math.min(width - hPad * 2, metrics.maxWidth),
+            alignSelf: 'center',
+          },
+        ]}
+      >
+        <Text style={[s.sectionTitle, { fontSize: clamp(width * 0.046, 17, 19), marginBottom: veryCompact ? 8 : 12 }]}>Your Path</Text>
+
+        <View style={[s.donationCard, { padding: veryCompact ? 10 : compact ? 12 : 16, marginBottom: veryCompact ? 8 : compact ? 10 : 16 }]}>
+          <Image
+            source={donationMascot}
+            style={[s.donationMascot, { width: veryCompact ? 50 : compact ? 58 : 80, height: veryCompact ? 50 : compact ? 58 : 80, marginRight: compact ? 10 : 14 }]}
+            resizeMode="contain"
+          />
+          <View style={s.donationCopy}>
+            <Text style={[s.donationSubtext, { fontSize: metrics.smallSize, lineHeight: metrics.smallSize + 4, marginBottom: veryCompact ? 2 : 4 }]} numberOfLines={veryCompact ? 1 : 2}>
+              Optional support for Introvee
+            </Text>
+            <Text style={[s.donationTitle, { fontSize: clamp(width * 0.05, 18, 23), lineHeight: clamp(width * 0.062, 23, 28), marginBottom: compact ? 7 : 12 }]} numberOfLines={1} adjustsFontSizeToFit>
+              Support Introvee
+            </Text>
+            <Text style={[s.donationCompliance, { fontSize: metrics.smallSize - 1, lineHeight: metrics.smallSize + 3 }]} numberOfLines={compact ? 2 : 3}>
+              Donations are optional and do not unlock any app features or content.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Donate to support Introvee"
+              onPress={openDonationModal}
+              style={({ pressed }) => [s.donateButton, { minHeight: veryCompact ? 32 : compact ? 34 : 38, paddingVertical: veryCompact ? 7 : 9 }, pressed && s.pressed]}
+            >
+              <Text style={s.donateButtonText}>Donate</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* ── Scrollable Level List Card (Accordion) ───────────── */}
         <View style={s.pathContainer}>
           <SectionList
             sections={sections}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             nestedScrollEnabled={true}
-            contentContainerStyle={s.listContent}
+            contentContainerStyle={[
+              s.listContent,
+              {
+                paddingHorizontal: compact ? 14 : 18,
+                paddingTop: veryCompact ? 10 : compact ? 12 : 16,
+                paddingBottom: compact ? 18 : 24
+              }
+            ]}
             renderSectionHeader={({ section }) => (
               <Pressable 
                 style={[
@@ -334,6 +410,11 @@ export function ProgressScreen() {
           />
         </View>
       </View>
+
+      <DonationModal
+        visible={donationModalVisible}
+        onClose={closeDonationModal}
+      />
     </SafeAreaView>
   );
 }
@@ -346,7 +427,7 @@ const s = StyleSheet.create({
   topContent: {
     paddingTop: 14,
     gap: 16,
-    paddingBottom: 10,
+    paddingBottom: 0,
   },
   
   // Header
@@ -377,17 +458,17 @@ const s = StyleSheet.create({
   motiveCopy: { color: C.text, fontSize: 22, lineHeight: 28, fontFamily: fonts.bold, fontWeight: '700', letterSpacing: -0.5 },
 
   // Section title
-  sectionTitle: { color: C.text, fontSize: 18, lineHeight: 24, fontFamily: fonts.bold, fontWeight: '700', letterSpacing: -0.2, marginTop: 4, marginBottom: 2 },
+  sectionTitle: { color: C.text, fontSize: 18, lineHeight: 24, fontFamily: fonts.bold, fontWeight: '700', letterSpacing: -0.2, marginBottom: 12 },
 
   // Path Container
   pathContainerWrapper: {
     flex: 1,
-    overflow: 'hidden',
+    marginTop: 10,
   },
   pathContainer: {
     flex: 1,
     backgroundColor: C.white,
-    borderRadius: 24,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: C.border,
     shadowColor: C.shadow,
@@ -398,8 +479,80 @@ const s = StyleSheet.create({
     overflow: 'hidden',
   },
   listContent: {
-    padding: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     paddingBottom: 24,
+  },
+  donationCard: {
+    backgroundColor: C.white,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    shadowColor: C.shadow,
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  donationMascot: {
+    width: 80,
+    height: 80,
+    marginRight: 14,
+    flexShrink: 0,
+  },
+  donationCopy: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'flex-start',
+  },
+  donationTitle: {
+    color: C.text,
+    fontSize: 22,
+    lineHeight: 27,
+    fontFamily: fonts.bold,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+    marginBottom: 12,
+  },
+  donationSubtext: {
+    color: C.sub,
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: fonts.regular,
+    fontWeight: '400',
+    marginBottom: 4,
+  },
+  donationCompliance: {
+    color: C.muted,
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: fonts.regular,
+    marginBottom: 8,
+  },
+  donateButton: {
+    backgroundColor: C.text,
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    minHeight: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: C.shadow,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  donateButtonText: {
+    color: C.white,
+    fontSize: 13,
+    lineHeight: 16,
+    fontFamily: fonts.bold,
+    fontWeight: '700',
   },
 
   // Level headers (Accordion)
@@ -500,4 +653,8 @@ const s = StyleSheet.create({
   timelineLabel: { color: C.text, fontSize: 14, lineHeight: 19, fontFamily: fonts.bold, fontWeight: '600', letterSpacing: -0.1 },
   timelineLabelMuted: { color: C.sub },
   timelineIconSlot: { width: 28, alignItems: 'center', justifyContent: 'center' },
+  pressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.98 }],
+  },
 });

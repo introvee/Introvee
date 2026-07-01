@@ -1,16 +1,13 @@
 import { forwardRef, useMemo, useRef, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Animated,
   Image,
-  Linking,
   Modal,
   Platform,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -18,23 +15,23 @@ import {
 } from 'react-native';
 import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import * as Clipboard from 'expo-clipboard';
 import {
   Check,
-  Copy,
   Download,
-  MessageCircle,
   X
 } from 'lucide-react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import ViewShot from 'react-native-view-shot';
+import type { ViewShotRef } from 'react-native-view-shot';
 import { fonts } from '../constants/fonts';
 import type { RootStackParamList } from '../navigation/types';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
 import { awardSharePoints } from '../db/repository';
 import { convertDareToCompletionText } from '../utils/dareText';
-import { downloadScreenAsImage } from '../utils/downloadScreen';
+import { captureScreenAsImage, saveScreenAsImage } from '../utils/downloadScreen';
+import { isShareTargetInstalled, shareImageToSocial } from '../utils/socialShare';
 import { XPAddAnimation } from '../components/XPAddAnimation';
 import { usePointsAnimationStore } from '../store/usePointsAnimationStore';
 
@@ -49,18 +46,18 @@ type SharePosterProps = {
 };
 
 const lime = '#C9FF35';
-const storyLink = 'https://introvert.app/dare-to-grow';
+const storyLink = 'https://introvee.vercel.app/';
 const posterBaseWidth = 350;
 const posterBaseHeight = 438;
 const posterAspectRatio = posterBaseHeight / posterBaseWidth;
 const posterCardPadding = 6;
-const posterTitleContentWidth = 292;
-const posterTitleContentHeight = 132;
-const posterTitleMaxLines = 5;
-const posterTitleReadableMinFontSize = 14;
-const posterTitleEmergencyMinFontSize = 8;
-const posterTitleMaxFontSize = 44;
+const posterTitleContentWidth = 257;
+const posterTitleContentHeight = 156;
+const posterTitleReadableMinFontSize = 19;
+const posterTitleEmergencyMinFontSize = 10;
 const titleSoftBreak = '\u200B';
+const dareShareMessage = `I just completed today’s dare on Introvee. Try this app and start your confidence journey.
+${storyLink}`;
 
 export function DareCompletedScreen({ navigation, route }: Props) {
   const { width, height } = useWindowDimensions();
@@ -68,40 +65,42 @@ export function DareCompletedScreen({ navigation, route }: Props) {
   const user = useAuthStore((state) => state.user);
   const profile = useProfileStore((state) => state.profile);
   const setProfile = useProfileStore((state) => state.setProfile);
-  const posterRef = useRef<View>(null);
-  const [busyAction, setBusyAction] = useState<'story' | 'save' | null>(null);
+  const posterRef = useRef<ViewShotRef>(null);
+  const [busyAction, setBusyAction] = useState<'save' | 'whatsapp' | 'instagram' | null>(null);
   const [shareBonusAdded, setShareBonusAdded] = useState(false);
   const [showRewardPopup, setShowRewardPopup] = useState(route.params.justCompleted ?? false);
   const responsive = getResponsiveStyles(width, height, insets.top, insets.bottom);
+  const didTriggerInitialPoints = useRef(false);
 
   const rawDareText = route.params.easier ? route.params.dare.easier_title : route.params.dare.title;
   const dareText = useMemo(() => convertDareToCompletionText(rawDareText), [rawDareText]);
-  const dareTextForShare = useMemo(() => dareText.replace(/[.!?]+$/, ''), [dareText]);
   const completedTime = useMemo(() => formatCompletedTime(route.params.elapsedSeconds), [route.params.elapsedSeconds]);
-  const shareText = useMemo(
-    () => `Dare complete: ${dareTextForShare}. Done in ${completedTime}. Becoming an extrovert one dare at a time. #DareToGrow ${storyLink}`,
-    [completedTime, dareTextForShare]
-  );
   
   const triggerAnimation = usePointsAnimationStore((state) => state.triggerAnimation);
 
   useEffect(() => {
-    if (!showRewardPopup && !route.params.justCompleted) {
+    if (!showRewardPopup && !route.params.justCompleted && !didTriggerInitialPoints.current) {
+      didTriggerInitialPoints.current = true;
       // If we are just viewing an already completed dare, trigger the floating animation on mount
       const totalEarned = route.params.basePoints + route.params.timingBonus + route.params.levelBonus;
       triggerAnimation(totalEarned, width / 2 - 20, height / 2 + 100);
     }
-  }, [showRewardPopup, route.params.justCompleted]);
+  }, [
+    height,
+    route.params.basePoints,
+    route.params.justCompleted,
+    route.params.levelBonus,
+    route.params.timingBonus,
+    showRewardPopup,
+    triggerAnimation,
+    width
+  ]);
 
   const handlePopupComplete = () => {
     setShowRewardPopup(false);
     const totalEarned = route.params.basePoints + route.params.timingBonus + route.params.levelBonus;
     triggerAnimation(totalEarned, width / 2 - 20, height / 2 + 100);
   };
-
-  async function exportPoster(filename: string) {
-    await downloadScreenAsImage(posterRef.current, filename);
-  }
 
   async function handleShareBonus() {
     if (!user || shareBonusAdded) return;
@@ -112,74 +111,49 @@ export function DareCompletedScreen({ navigation, route }: Props) {
         if (updatedProfile) setProfile(updatedProfile);
         triggerAnimation(pointsAwarded, width / 2 - 20, height / 2 + 150);
       }
-    } catch (e) {
-      console.log('Failed to award share points', e);
-    }
-  }
-
-  async function shareToStory() {
-    setBusyAction('story');
-    try {
-      await exportPoster('introvert-dare-story.png');
-      await handleShareBonus();
-    } catch (error) {
-      try {
-        await Share.share({ message: shareText, url: storyLink });
-        await handleShareBonus();
-      } catch {
-        Alert.alert('Could not share', error instanceof Error ? error.message : 'Please try again.');
-      }
-    } finally {
-      setBusyAction(null);
+    } catch {
+      return;
     }
   }
 
   async function savePost() {
     setBusyAction('save');
     try {
-      await exportPoster('introvert-dare-complete.png');
+      await saveScreenAsImage(posterRef.current, 'introvert-dare-complete.png');
+      Alert.alert('Saved', 'Post saved successfully');
     } catch (error) {
-      Alert.alert('Could not save', error instanceof Error ? error.message : 'Please try again.');
+      Alert.alert('Could not save', getShareErrorMessage(error, 'Unable to save post. Please try again.'));
     } finally {
       setBusyAction(null);
     }
   }
 
   async function shareToPlatform(target: 'instagram' | 'whatsapp') {
-    if (target === 'instagram') {
-      await shareToStory();
-      return;
-    }
-
+    const platformName = target === 'whatsapp' ? 'WhatsApp' : 'Instagram';
+    setBusyAction(target);
     try {
-      const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(shareText)}`;
-      await Linking.openURL(whatsappUrl);
-      await handleShareBonus();
-    } catch {
-      try {
-        await Share.share({ message: shareText, url: storyLink });
-        await handleShareBonus();
-      } catch (err) {
-        // user cancelled or error
-      }
-    }
-  }
+      const canOpenApp = await isShareTargetInstalled(target);
 
-  async function copyAchievement() {
-    try {
-      const webNavigator = globalThis.navigator as { clipboard?: { writeText?: (text: string) => Promise<void> } } | undefined;
-      if (Platform.OS === 'web' && webNavigator?.clipboard?.writeText) {
-        await webNavigator.clipboard.writeText(shareText);
-        Alert.alert('Copied', 'Achievement text copied.');
-        await handleShareBonus();
+      if (!canOpenApp) {
+        showShareAlert(target === 'whatsapp' ? 'WhatsApp is not installed' : 'Instagram is not installed');
         return;
       }
 
-      await Clipboard.setStringAsync(shareText);
-      Alert.alert('Copied', 'Achievement text copied.');
+      const uri =
+        typeof posterRef.current?.capture === 'function'
+          ? await posterRef.current.capture()
+          : await captureScreenAsImage(
+              posterRef.current,
+              target === 'whatsapp' ? 'introvert-dare-whatsapp.png' : 'introvert-dare-instagram.png'
+            );
+
+      await shareImageToSocial(target, uri, dareShareMessage);
+
       await handleShareBonus();
     } catch (error) {
-      Alert.alert('Could not copy', error instanceof Error ? error.message : 'Please try again.');
+      showShareAlert(`Could not share to ${platformName}`, getShareErrorMessage(error, 'Please try again.'));
+    } finally {
+      setBusyAction(null);
     }
   }
 
@@ -211,61 +185,76 @@ export function DareCompletedScreen({ navigation, route }: Props) {
         </View>
 
         <View style={[styles.posterShadow, responsive.posterShadow]}>
-          <SharePoster
+          <ViewShot
             ref={posterRef}
-            dareText={dareText}
-            completedTime={completedTime}
-            posterWidth={responsive.posterWidth}
-            userImage={profile?.avatar_url}
-            userName={profile?.name}
-          />
+            options={{
+              format: 'png',
+              quality: 1,
+              result: 'tmpfile'
+            }}
+            style={styles.posterCapture}
+          >
+            <SharePoster
+              dareText={dareText}
+              completedTime={completedTime}
+              posterWidth={responsive.posterWidth}
+              userImage={profile?.avatar_url}
+              userName={profile?.name}
+            />
+          </ViewShot>
         </View>
 
         <View style={[styles.actions, responsive.actions]}>
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Save Post"
             disabled={busyAction !== null}
-            onPress={shareToStory}
+            onPress={savePost}
             style={({ pressed }) => [
-              styles.storyButton,
+              styles.shareButton,
+              styles.saveButton,
               responsive.actionButton,
               pressed && busyAction === null && styles.primaryPressed,
               busyAction && styles.disabled
             ]}
           >
-            {busyAction === 'story' ? <ActivityIndicator color="#FFFFFF" size="small" /> : null}
-            <Text style={styles.storyText}>{busyAction === 'story' ? 'Preparing...' : 'Share to Story'}</Text>
+            {busyAction === 'save' ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Download color="#FFFFFF" size={22} strokeWidth={2.45} />}
+            <Text style={styles.saveText}>{busyAction === 'save' ? 'Saving...' : 'Save Post'}</Text>
           </Pressable>
 
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="WhatsApp"
             disabled={busyAction !== null}
-            onPress={savePost}
+            onPress={() => shareToPlatform('whatsapp')}
             style={({ pressed }) => [
-              styles.saveButton,
+              styles.shareButton,
+              styles.platformButton,
               responsive.actionButton,
               pressed && busyAction === null && styles.secondaryPressed,
               busyAction && styles.disabled
             ]}
           >
-            {busyAction === 'save' ? <ActivityIndicator color="#111111" size="small" /> : <Download color="#111111" size={22} strokeWidth={2.45} />}
-            <Text style={styles.saveText}>{busyAction === 'save' ? 'Saving...' : 'Save Post'}</Text>
+            {busyAction === 'whatsapp' ? <ActivityIndicator color="#111111" size="small" /> : <WhatsAppGlyph />}
+            <Text style={styles.platformText}>{busyAction === 'whatsapp' ? 'Preparing...' : 'WhatsApp'}</Text>
           </Pressable>
 
-          <View style={styles.socialRow}>
-            <SocialButton label="IG" onPress={() => shareToPlatform('instagram')}>
-              <InstagramGlyph />
-              <Text style={styles.socialText}>IG</Text>
-            </SocialButton>
-            <SocialButton label="WA" onPress={() => shareToPlatform('whatsapp')}>
-              <MessageCircle color="#25D366" size={24} strokeWidth={2.25} />
-              <Text style={styles.socialText}>WA</Text>
-            </SocialButton>
-            <SocialButton label="Copy" onPress={copyAchievement}>
-              <Copy color="#111111" size={22} strokeWidth={2.25} />
-              <Text style={styles.socialText}>Copy</Text>
-            </SocialButton>
-          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Instagram"
+            disabled={busyAction !== null}
+            onPress={() => shareToPlatform('instagram')}
+            style={({ pressed }) => [
+              styles.shareButton,
+              styles.platformButton,
+              responsive.actionButton,
+              pressed && busyAction === null && styles.secondaryPressed,
+              busyAction && styles.disabled
+            ]}
+          >
+            {busyAction === 'instagram' ? <ActivityIndicator color="#111111" size="small" /> : <InstagramGlyph />}
+            <Text style={styles.platformText}>{busyAction === 'instagram' ? 'Preparing...' : 'Instagram'}</Text>
+          </Pressable>
         </View>
       </ScrollView>
 
@@ -285,7 +274,7 @@ const SharePoster = forwardRef<View, SharePosterProps>(function SharePoster({ da
   const initial = getInitial(userName);
   const highlightedWord = chooseHighlightedWord(dareText);
   const avatarMetrics = getPosterAvatarMetrics(posterWidth, scale);
-  const achievementTextStyle = getAchievementTextStyle(dareText);
+  const achievementTextStyle = getShareTextStyle(dareText);
 
   return (
     <View ref={ref} collapsable={false} style={posterStyles.poster}>
@@ -312,7 +301,7 @@ const SharePoster = forwardRef<View, SharePosterProps>(function SharePoster({ da
           <View style={posterStyles.headerRow}>
             <View style={posterStyles.journeyBlock}>
               <Text style={posterStyles.journeyText} numberOfLines={1} adjustsFontSizeToFit>
-                Becoming Extrovert
+                Building Confidence
               </Text>
               <Text style={posterStyles.microText} numberOfLines={1}>
                 DARE COMPLETED
@@ -384,25 +373,30 @@ function AchievementTitle({ text, highlightedWord, style }: { text: string; high
   );
 }
 
-function SocialButton({ label, children, onPress }: { label: string; children: ReactNode; onPress: () => void }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={({ pressed }) => [styles.socialButton, pressed && styles.secondaryPressed]}
-    >
-      {children}
-    </Pressable>
-  );
-}
-
 function InstagramGlyph() {
   return (
     <Svg width={25} height={25} viewBox="0 0 25 25">
-      <Rect x={4} y={4} width={17} height={17} rx={5} fill="none" stroke="#F0438B" strokeWidth={2.2} />
-      <Circle cx={12.5} cy={12.5} r={4} fill="none" stroke="#FF7A1A" strokeWidth={2.2} />
-      <Circle cx={17.5} cy={7.7} r={1.35} fill="#B13CFF" />
+      <Rect x={4} y={4} width={17} height={17} rx={5} fill="none" stroke="#111111" strokeWidth={2.2} />
+      <Circle cx={12.5} cy={12.5} r={4} fill="none" stroke="#111111" strokeWidth={2.2} />
+      <Circle cx={17.5} cy={7.7} r={1.35} fill="#111111" />
+    </Svg>
+  );
+}
+
+function WhatsAppGlyph() {
+  return (
+    <Svg width={25} height={25} viewBox="0 0 25 25">
+      <Path
+        d="M12.3 4.2C7.9 4.2 4.4 7.7 4.4 12c0 1.5.4 2.9 1.2 4.1l-1 4 4.1-1.1c1.1.6 2.4 1 3.7 1 4.3 0 7.8-3.5 7.8-7.8S16.6 4.2 12.3 4.2Z"
+        fill="none"
+        stroke="#111111"
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M9.2 8.7c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.7 1.7c.1.3 0 .5-.1.6l-.5.6c.7 1.2 1.6 2.1 2.8 2.8l.7-.7c.2-.2.4-.2.7-.1l1.5.7c.3.1.4.3.4.6v.4c0 .4-.2.7-.6.9-.5.3-1.1.4-1.8.3-2.9-.4-5.9-3.1-6.4-6.1-.1-.7 0-1.3.3-1.8Z"
+        fill="#111111"
+      />
     </Svg>
   );
 }
@@ -469,6 +463,21 @@ function formatCompletedTime(totalSeconds: number) {
   return `${minutes} ${minutes === 1 ? 'min' : 'mins'}`;
 }
 
+function getShareErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'string' && error.trim()) return error;
+  return fallback;
+}
+
+function showShareAlert(title: string, message?: string) {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    window.alert(message ? `${title}\n\n${message}` : title);
+    return;
+  }
+
+  Alert.alert(title, message);
+}
+
 function getPosterAvatarMetrics(_posterWidth: number, _scale: number) {
   const frameSize = 96;
   const ringThickness = 6;
@@ -494,32 +503,30 @@ function getPosterAvatarMetrics(_posterWidth: number, _scale: number) {
   };
 }
 
-function getAchievementTextStyle(value: string) {
+function getShareTextStyle(value: string) {
   const normalized = value.replace(/\s+/g, ' ').trim();
   const characterCount = normalized.length;
-  const preferredFontSize = getPreferredTitleFontSize(characterCount);
-  const fitWidth = posterTitleContentWidth - 4;
-  const fitHeight = posterTitleContentHeight - 4;
+  const preferredFontSize = getPreferredShareFontSize(characterCount);
+  const fitWidth = posterTitleContentWidth;
+  const fitHeight = posterTitleContentHeight;
   let fontSize = posterTitleEmergencyMinFontSize;
 
   for (let nextSize = preferredFontSize; nextSize >= posterTitleEmergencyMinFontSize; nextSize -= 1) {
-    const lineHeightRatio = getTitleLineHeightRatio(characterCount, nextSize);
+    const lineHeightRatio = getShareLineHeightRatio(characterCount, nextSize);
     const lineHeight = nextSize * lineHeightRatio;
     const lineCount = estimateTitleLineCount(normalized, nextSize, fitWidth);
-    const maxLinesForHeight = Math.floor(fitHeight / lineHeight);
-    const allowedLines = nextSize >= posterTitleReadableMinFontSize ? posterTitleMaxLines : maxLinesForHeight;
 
-    if (lineCount <= allowedLines && lineCount * lineHeight <= fitHeight) {
+    if (lineCount * lineHeight <= fitHeight) {
       fontSize = nextSize;
       break;
     }
   }
 
-  const lineHeightRatio = getTitleLineHeightRatio(characterCount, fontSize);
+  const lineHeightRatio = getShareLineHeightRatio(characterCount, fontSize);
 
   return {
     fontSize,
-    lineHeight: fontSize * lineHeightRatio
+    lineHeight: Math.round(fontSize * lineHeightRatio)
   };
 }
 
@@ -553,18 +560,19 @@ function estimateTitleLineCount(value: string, fontSize: number, availableWidth:
   return lines;
 }
 
-function getPreferredTitleFontSize(characterCount: number) {
-  if (characterCount <= 30) return posterTitleMaxFontSize;
-  if (characterCount <= 50) return 38;
-  if (characterCount <= 75) return 32;
-  return 26;
+function getPreferredShareFontSize(characterCount: number) {
+  if (characterCount <= 35) return 34;
+  if (characterCount <= 55) return 30;
+  if (characterCount <= 75) return 26;
+  if (characterCount <= 100) return 22;
+  return 19;
 }
 
-function getTitleLineHeightRatio(characterCount: number, fontSize: number) {
-  if (fontSize < posterTitleReadableMinFontSize) return 1;
-  if (characterCount > 75) return 1;
-  if (characterCount > 50) return 1.02;
-  return 1.04;
+function getShareLineHeightRatio(characterCount: number, fontSize: number) {
+  if (fontSize < posterTitleReadableMinFontSize || characterCount > 100) return 1.02;
+  if (characterCount > 75) return 1.05;
+  if (characterCount > 55) return 1.08;
+  return 1.12;
 }
 
 function estimateTitleWordWidth(value: string, fontSize: number) {
@@ -769,36 +777,18 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     elevation: 6
   },
+  posterCapture: {
+    flex: 1,
+    width: '100%',
+    height: '100%'
+  },
   actions: {
     alignItems: 'center',
-    gap: 9
+    gap: 10
   },
-  storyButton: {
+  shareButton: {
     width: '100%',
     borderRadius: 18,
-    backgroundColor: '#151515',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    overflow: 'hidden',
-    shadowColor: theme.shadow,
-    shadowOpacity: 0.15,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6
-  },
-  storyText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    lineHeight: 19,
-    fontFamily: fonts.bold,
-    letterSpacing: 0
-  },
-  saveButton: {
-    width: '100%',
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: 'rgba(17,17,17,0.08)',
     flexDirection: 'row',
@@ -811,38 +801,23 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 3
   },
+  saveButton: {
+    backgroundColor: '#111111',
+    borderColor: '#111111'
+  },
+  platformButton: {
+    backgroundColor: '#FFFFFF'
+  },
   saveText: {
-    color: theme.text,
+    color: '#FFFFFF',
     fontSize: 15,
     lineHeight: 19,
     fontFamily: fonts.bold
   },
-  socialRow: {
-    flexDirection: 'row',
-    gap: 8,
-    width: '100%'
-  },
-  socialButton: {
-    flex: 1,
-    height: 42,
-    borderRadius: 15,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: 'rgba(17,17,17,0.08)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    shadowColor: theme.shadow,
-    shadowOpacity: 0.07,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3
-  },
-  socialText: {
+  platformText: {
     color: theme.text,
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 15,
+    lineHeight: 19,
     fontFamily: fonts.bold
   },
   pressed: {
@@ -1226,7 +1201,6 @@ const posterStyles = StyleSheet.create({
     zIndex: 10,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    overflow: 'hidden',
     ...Platform.select({ web: ({ boxSizing: 'border-box' } as ViewStyle), default: {} })
   },
   headerRow: {
@@ -1248,7 +1222,7 @@ const posterStyles = StyleSheet.create({
     alignSelf: 'center',
     flexShrink: 0,
     marginTop: 3,
-    marginBottom: 13,
+    marginBottom: 10,
     backgroundColor: '#F8F6F0',
     shadowColor: '#000000',
     shadowOpacity: 0.13,
@@ -1305,21 +1279,25 @@ const posterStyles = StyleSheet.create({
     marginTop: 3
   },
   posterTextFrame: {
-    width: '100%',
-    maxWidth: 304,
-    height: 144,
+    width: '85%',
+    maxWidth: posterTitleContentWidth,
+    minHeight: 108,
+    maxHeight: posterTitleContentHeight,
     zIndex: 13,
     justifyContent: 'center',
     alignItems: 'center',
     flexShrink: 0,
-    padding: 6,
-    overflow: 'hidden',
+    alignSelf: 'center',
+    paddingVertical: 0,
+    paddingHorizontal: 0,
     backgroundColor: 'transparent',
     ...Platform.select({ web: ({ boxSizing: 'border-box' } as ViewStyle), default: {} })
   },
   achievementTitle: {
     color: '#080808',
     width: '100%',
+    maxWidth: '100%',
+    alignSelf: 'center',
     fontFamily: serifFont,
     fontWeight: Platform.select({ web: '800', default: '700' }),
     textAlign: 'center',
@@ -1385,7 +1363,7 @@ const posterStyles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     flexShrink: 0,
-    marginTop: 12
+    marginTop: 10
   },
   doneBadge: {
     minWidth: 176,

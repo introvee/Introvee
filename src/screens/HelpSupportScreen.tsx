@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform, Linking } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform, Linking, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronRight, ChevronDown, Shield, Mail, HelpCircle } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getTabBarReservedHeight } from '../constants/layout';
+import { getResponsivePageMetrics } from '../constants/responsive';
 
 const displayFont = Platform.select({
   ios: 'SF Pro Display',
@@ -56,30 +57,44 @@ function MenuItem({ icon: Icon, label, onPress, isLast }: { icon: any; label: st
 
 export function HelpSupportScreen() {
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
   const navigation = useNavigation();
+  const metrics = getResponsivePageMetrics(width, height);
 
   const handleEmailSupport = (subject: string) => {
-    Linking.openURL(`mailto:support@introvertapp.com?subject=${encodeURIComponent(subject)}`);
+    Linking.openURL(`mailto:support@introvee.com?subject=${encodeURIComponent(subject)}`);
   };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingHorizontal: metrics.horizontalPadding, paddingVertical: metrics.short ? 12 : 16 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <ArrowLeft size={24} color={C.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Help / Support</Text>
+        <Text style={[styles.headerTitle, { fontSize: metrics.headerTitleSize }]} numberOfLines={1} adjustsFontSizeToFit>
+          Help / Support
+        </Text>
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: getTabBarReservedHeight(insets.bottom) }]} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: metrics.horizontalPadding,
+            paddingBottom: getTabBarReservedHeight(insets.bottom),
+            maxWidth: metrics.maxWidth,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Intro Card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { borderRadius: metrics.cardRadius, padding: metrics.cardPadding }]}>
           <View style={styles.cardHeader}>
             <HelpCircle size={20} color={C.text} style={styles.cardIcon} />
-            <Text style={styles.cardTitle}>How can we help you?</Text>
+            <Text style={[styles.cardTitle, { fontSize: metrics.bodySize }]}>How can we help you?</Text>
           </View>
-          <Text style={styles.cardBody}>
+          <Text style={[styles.cardBody, { fontSize: metrics.bodySize, lineHeight: metrics.bodySize + 7 }]}>
             Find answers, report an issue, or contact our support team. We're here to make your 100-day confidence journey smooth and safe.
           </Text>
         </View>
@@ -87,10 +102,10 @@ export function HelpSupportScreen() {
 
 
         {/* FAQ Section */}
-        <View style={styles.cardNoPadding}>
+        <View style={[styles.cardNoPadding, { borderRadius: metrics.cardRadius, paddingHorizontal: metrics.cardPadding }]}>
           <FAQItem 
-            question="How does Introvert App work?"
-            answer="Introvert App gives you one social confidence dare each day. There are 20 levels, and each level has 5 stages. Complete all 100 stages to finish your 100-day journey."
+            question="How does Introvee work?"
+            answer="Introvee gives you one social confidence dare each day. There are 20 levels, and each level has 5 stages. Complete all 100 stages to finish your 100-day journey."
           />
           <FAQItem 
             question="Why is my next stage locked?"
@@ -98,7 +113,7 @@ export function HelpSupportScreen() {
           />
           <FAQItem 
             question="Can I skip a dare?"
-            answer="If a dare feels unsafe, uncomfortable, or not suitable for your situation, do not perform it. Your safety comes first."
+            answer="Feeling unsure? No pressure. If you do not want to do today's dare, just tap the 'I did it' button and come back tomorrow for a new dare. Your comfort and safety come first."
           />
           <FAQItem 
             question="Why are points not updated?"
@@ -108,6 +123,10 @@ export function HelpSupportScreen() {
             question="Can I change my profile details?"
             answer="Yes. You can edit your name, profile picture, age, gender, and life category from your Profile page if editing is enabled."
           />
+          <FAQItem
+            question="How can I disable the donation popup on the Home screen?"
+            answer="You can disable it from Settings. Go to Settings and turn off the “Donation popup” option. After that, the donation mascot will no longer appear on your Home screen."
+          />
           <FAQItem 
             question="Is my profile photo shared automatically?"
             answer="No. Your profile photo is only used inside the app and on your completion poster. You decide whether to share the poster outside the app."
@@ -116,43 +135,45 @@ export function HelpSupportScreen() {
         </View>
 
         {/* Safety Reminder Card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { borderRadius: metrics.cardRadius, padding: metrics.cardPadding }]}>
           <View style={styles.cardHeader}>
             <Shield size={20} color={C.text} style={styles.cardIcon} />
-            <Text style={styles.cardTitle}>Your safety comes first</Text>
+            <Text style={[styles.cardTitle, { fontSize: metrics.bodySize }]}>Your safety comes first</Text>
           </View>
-          <Text style={styles.cardBody}>
+          <Text style={[styles.cardBody, { fontSize: metrics.bodySize, lineHeight: metrics.bodySize + 7 }]}>
             Never complete a dare that feels unsafe, disrespectful, illegal, or uncomfortable. Choose confidence, not pressure.
           </Text>
         </View>
 
         {/* Contact Support Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Still need help?</Text>
-          <Text style={styles.cardBody}>
+        <View style={[styles.card, { borderRadius: metrics.cardRadius, padding: metrics.cardPadding }]}>
+          <Text style={[styles.cardTitle, { fontSize: metrics.bodySize }]}>Still need help?</Text>
+          <Text style={[styles.cardBody, { fontSize: metrics.bodySize, lineHeight: metrics.bodySize + 7 }]}>
             Contact our support team and we'll help you as soon as possible.
           </Text>
           <View style={styles.emailRow}>
             <Mail size={16} color={C.sub} />
-            <Text style={styles.emailText}>support@introvertapp.com</Text>
+            <Text style={[styles.emailText, { fontSize: metrics.bodySize }]} numberOfLines={1} adjustsFontSizeToFit>
+              support@introvee.com
+            </Text>
           </View>
           <TouchableOpacity 
-            style={styles.primaryButton}
-            onPress={() => handleEmailSupport('Introvert App Support Request')}
+            style={[styles.primaryButton, { minHeight: metrics.buttonHeight }]}
+            onPress={() => handleEmailSupport('Introvee Support Request')}
           >
             <Text style={styles.primaryButtonText}>Contact Support</Text>
           </TouchableOpacity>
         </View>
 
         {/* Report Issue Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Report a problem</Text>
-          <Text style={styles.cardBody}>
+        <View style={[styles.card, { borderRadius: metrics.cardRadius, padding: metrics.cardPadding }]}>
+          <Text style={[styles.cardTitle, { fontSize: metrics.bodySize }]}>Report a problem</Text>
+          <Text style={[styles.cardBody, { fontSize: metrics.bodySize, lineHeight: metrics.bodySize + 7 }]}>
             Found a bug or something not working correctly? Send us a short message with what happened.
           </Text>
           <TouchableOpacity 
-            style={styles.primaryButton}
-            onPress={() => handleEmailSupport('Introvert App Issue Report')}
+            style={[styles.primaryButton, { minHeight: metrics.buttonHeight }]}
+            onPress={() => handleEmailSupport('Introvee Issue Report')}
           >
             <Text style={styles.primaryButtonText}>Report Issue</Text>
           </TouchableOpacity>
@@ -186,8 +207,9 @@ const styles = StyleSheet.create({
     width: 40,
   },
   scrollContent: { 
-    paddingHorizontal: 20, 
     paddingTop: 8,
+    width: '100%',
+    alignSelf: 'center',
   },
   card: {
     backgroundColor: C.white,

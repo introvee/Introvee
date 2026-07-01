@@ -29,10 +29,15 @@ export function IntroSplashScreen({ navigation }: Props) {
           Hey!{'\n'}
           You got this.
         </Text>
-        <Text style={[styles.subtitle, compact && styles.subtitleCompact]}>
-          You don't have to be{'\n'}
-          loud to be brave.
-        </Text>
+        <View style={[styles.subtitleBlock, compact && styles.subtitleBlockCompact]}>
+          <View style={styles.subtitleLine}>
+            <Text style={[styles.subtitleText, compact && styles.subtitleTextCompact]}>Build your</Text>
+            <View style={styles.highlightBlock}>
+              <Text style={[styles.highlightText, compact && styles.highlightTextCompact]}>confidence</Text>
+            </View>
+          </View>
+          <Text style={[styles.subtitleText, compact && styles.subtitleTextCompact]}>one dare at a time.</Text>
+        </View>
 
         <Pressable accessibilityLabel="Continue" accessibilityRole="button" onPress={openLogin} style={({ pressed }) => [styles.nextButton, compact && styles.nextButtonCompact, pressed && styles.nextPressed]}>
           <ArrowRight color="#FFFFFF" size={34} strokeWidth={2.5} />
@@ -84,21 +89,54 @@ const styles = StyleSheet.create({
     fontSize: 32,
     lineHeight: 38
   },
-  subtitle: {
-    width: '78%',
-    color: '#6F6F76',
-    fontSize: 20,
-    lineHeight: 29,
-    letterSpacing: -0.2,
-    textAlign: 'center',
-    fontFamily: fonts.regular,
-    fontWeight: '400',
+  subtitleBlock: {
+    width: '86%',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 85
   },
-  subtitleCompact: {
-    fontSize: 18,
-    lineHeight: 26,
+  subtitleBlockCompact: {
     marginBottom: 58
+  },
+  subtitleLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    flexWrap: 'wrap'
+  },
+  subtitleText: {
+    color: '#2A1715',
+    fontSize: 20,
+    lineHeight: 27,
+    letterSpacing: 0,
+    textAlign: 'center',
+    fontFamily: fonts.bold,
+    fontWeight: '700'
+  },
+  subtitleTextCompact: {
+    fontSize: 18,
+    lineHeight: 25
+  },
+  highlightBlock: {
+    backgroundColor: '#C9FF35',
+    borderRadius: 7,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  highlightText: {
+    color: '#111111',
+    fontSize: 20,
+    lineHeight: 25,
+    letterSpacing: 0,
+    fontFamily: fonts.bold,
+    fontWeight: '800'
+  },
+  highlightTextCompact: {
+    fontSize: 18,
+    lineHeight: 23
   },
   nextButton: {
     width: 72,

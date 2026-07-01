@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Flame, Star } from 'lucide-react-native';
 import { fonts } from '../constants/fonts';
+import { clamp } from '../constants/responsive';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const lime = '#C9FF35';
@@ -26,6 +27,7 @@ export function AnimatedRewardPopup({
   streakCount,
   onAnimationComplete
 }: AnimatedRewardPopupProps) {
+  const { width, height } = useWindowDimensions();
   const pointsEarnedToday = basePoints + timingBonus + levelBonus + (shareBonusAdded ? 25 : 0);
 
   const [animatedXP, setAnimatedXP] = useState(0);
@@ -37,8 +39,8 @@ export function AnimatedRewardPopup({
   const titleOpacity = useRef(new Animated.Value(0)).current;
   const titleTranslateY = useRef(new Animated.Value(10)).current;
 
-  const size = 160;
-  const strokeWidth = 14;
+  const size = clamp(Math.min(width, height) * 0.34, 120, 160);
+  const strokeWidth = clamp(size * 0.0875, 10, 14);
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
 
@@ -46,13 +48,14 @@ export function AnimatedRewardPopup({
     const duration = 1600;
     const startTime = Date.now();
     let animationFrame: number;
+    let mounted = true;
 
     const animateNum = () => {
       const now = Date.now();
       const progress = Math.min(1, (now - startTime) / duration);
       const easeProgress = 1 - Math.pow(1 - progress, 4);
 
-      setAnimatedXP(Math.round(easeProgress * pointsEarnedToday));
+      if (mounted) setAnimatedXP(Math.round(easeProgress * pointsEarnedToday));
 
       if (progress < 1) {
         animationFrame = requestAnimationFrame(animateNum);
@@ -61,7 +64,7 @@ export function AnimatedRewardPopup({
 
     animationFrame = requestAnimationFrame(animateNum);
 
-    Animated.sequence([
+    const animation = Animated.sequence([
       Animated.parallel([
         Animated.timing(titleOpacity, {
           toValue: 1,
@@ -93,13 +96,18 @@ export function AnimatedRewardPopup({
           useNativeDriver: true
         })
       ])
-    ]).start(() => {
+    ]);
+
+    animation.start(() => {
+      if (!mounted) return;
       setIsDone(true);
       onAnimationComplete();
     });
 
     return () => {
+      mounted = false;
       if (animationFrame) cancelAnimationFrame(animationFrame);
+      animation.stop();
     };
   }, [pointsEarnedToday, onAnimationComplete, ringProgress, cardsOpacity, cardsTranslateY, titleOpacity, titleTranslateY]);
 
@@ -117,7 +125,7 @@ export function AnimatedRewardPopup({
         <Text style={styles.title}>Reward Summary</Text>
       </Animated.View>
 
-      <View style={styles.circleContainer}>
+      <View style={[styles.circleContainer, { width: size, height: size }]}>
         {/* Subtle decorative background dots */}
         <View style={[styles.dot, styles.dot1]} />
         <View style={[styles.dot, styles.dot2]} />
@@ -152,7 +160,7 @@ export function AnimatedRewardPopup({
           />
         </Svg>
         <View style={styles.xpTextContainer}>
-          <Text style={styles.xpAmount}>+{animatedXP}</Text>
+          <Text style={[styles.xpAmount, { fontSize: clamp(size * 0.26, 32, 42), lineHeight: clamp(size * 0.3, 38, 48) }]}>+{animatedXP}</Text>
           <Text style={styles.xpLabel}>XP</Text>
         </View>
       </View>
