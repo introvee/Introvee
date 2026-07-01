@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fonts } from '../constants/fonts';
+import { getBottomSafeSpace } from '../constants/layout';
 import { clamp, getResponsivePageMetrics } from '../constants/responsive';
 
 const C = {
@@ -43,6 +44,7 @@ export function DonationModal({ visible, onClose }: Props) {
   const [customAmount, setCustomAmount] = useState('');
   const metrics = getResponsivePageMetrics(width, height);
   const modalPadding = clamp(width * 0.055, 18, 22);
+  const bottomSpace = getBottomSafeSpace(insets.bottom);
 
   const [countryCode] = useState<string>(
     (localizationWithLegacyRegion.region || Localization.getLocales?.()[0]?.regionCode || 'US').toUpperCase()
@@ -105,12 +107,12 @@ export function DonationModal({ visible, onClose }: Props) {
           {
             paddingHorizontal: metrics.horizontalPadding,
             paddingTop: insets.top + 16,
-            paddingBottom: insets.bottom + 16,
+            paddingBottom: bottomSpace + 16,
           },
         ]}
       >
         <Pressable style={styles.modalBackdrop} onPress={onClose} />
-        <View style={[styles.modalCard, { maxWidth: metrics.maxWidth, maxHeight: Math.max(280, height - insets.top - insets.bottom - 32) }]}>
+        <View style={[styles.modalCard, { maxWidth: metrics.maxWidth, maxHeight: Math.max(280, height - insets.top - bottomSpace - 32) }]}>
           <ScrollView
             contentContainerStyle={{ padding: modalPadding, paddingTop: modalPadding + 2 }}
             showsVerticalScrollIndicator={false}

@@ -6,7 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../constants/colors';
 import { fonts } from '../constants/fonts';
-import { getTabBarBottomOffset, TAB_BAR_BASE_HEIGHT } from '../constants/layout';
+import { getBottomSafeSpace, getTabBarBottomOffset, TAB_BAR_BASE_HEIGHT } from '../constants/layout';
 import { clamp, getResponsivePageMetrics } from '../constants/responsive';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
@@ -107,7 +107,7 @@ function EditProfileModal({ visible, onClose, profile, onSave }: { visible: bool
           </View>
         </ScrollView>
 
-        <View style={[styles.modalFooter, { paddingBottom: insets.bottom + 20 }]}>
+        <View style={[styles.modalFooter, { paddingBottom: getBottomSafeSpace(insets.bottom) + 20 }]}>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={isSaving}>
             {isSaving ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveButtonText}>Save Changes</Text>}
           </TouchableOpacity>

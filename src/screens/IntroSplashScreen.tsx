@@ -1,8 +1,9 @@
 import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ArrowRight } from 'lucide-react-native';
 import { fonts } from '../constants/fonts';
+import { getBottomSafeSpace } from '../constants/layout';
 import type { AuthStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Intro'>;
@@ -11,18 +12,27 @@ const introCharacter = require('../../assets/images/Page-1.png');
 
 export function IntroSplashScreen({ navigation }: Props) {
   const { height, width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const compact = height < 720;
   const veryCompact = height < 640;
   const mascotWidth = veryCompact ? 145 : Math.min(165, Math.max(145, width * 0.423));
   const mascotHeight = Math.round(mascotWidth * (230 / 165));
+  const bottomSpace = getBottomSafeSpace(insets.bottom);
 
   function openLogin() {
     navigation.replace('Login');
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <View style={[styles.content, compact && styles.contentCompact, veryCompact && styles.contentVeryCompact]}>
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      <View
+        style={[
+          styles.content,
+          compact && styles.contentCompact,
+          veryCompact && styles.contentVeryCompact,
+          { paddingBottom: bottomSpace + (veryCompact ? 42 : compact ? 52 : 64) }
+        ]}
+      >
         <Image source={introCharacter} style={[styles.mascot, compact && styles.mascotCompact, { width: mascotWidth, height: mascotHeight }]} resizeMode="contain" />
 
         <Text style={[styles.title, compact && styles.titleCompact]}>

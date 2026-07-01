@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { supabase } from '../lib/supabase';
-import { getTabBarReservedHeight } from '../constants/layout';
+import { getBottomSafeSpace, getTabBarReservedHeight } from '../constants/layout';
 import { clamp, getResponsivePageMetrics } from '../constants/responsive';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '../navigation/types';
@@ -51,7 +51,8 @@ export function SettingsScreen() {
 
   const donationPopupEnabled = settings?.donation_popup_enabled ?? true;
   const metrics = getResponsivePageMetrics(width, height);
-  const modalMaxHeight = Math.max(320, height - insets.top - insets.bottom - 32);
+  const bottomSpace = getBottomSafeSpace(insets.bottom);
+  const modalMaxHeight = Math.max(320, height - insets.top - bottomSpace - 32);
 
   const handleDonationPopupToggle = (enabled: boolean) => {
     if (!user?.id) return;
@@ -165,7 +166,7 @@ export function SettingsScreen() {
 
       {/* Delete Account Modal */}
       <Modal visible={deleteModalVisible} transparent animationType="fade">
-        <View style={[styles.modalOverlay, { paddingHorizontal: metrics.horizontalPadding, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }]}>
+        <View style={[styles.modalOverlay, { paddingHorizontal: metrics.horizontalPadding, paddingTop: insets.top + 16, paddingBottom: bottomSpace + 16 }]}>
           <View style={[styles.modalContent, { maxWidth: metrics.maxWidth, maxHeight: modalMaxHeight, borderRadius: metrics.cardRadius }]}>
             <ScrollView
               contentContainerStyle={{ padding: metrics.cardPadding }}

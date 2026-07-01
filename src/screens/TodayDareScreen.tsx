@@ -32,7 +32,7 @@ import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Stop } from 'react-na
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { copy } from '../constants/copy';
 import { fonts } from '../constants/fonts';
-import { getTabBarReservedHeight } from '../constants/layout';
+import { TAB_BAR_BASE_HEIGHT, getBottomSafeSpace, getTabBarBottomOffset, getTabBarReservedHeight } from '../constants/layout';
 import { getTodayDare, getTodaysDareLog } from '../services/dareService';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
@@ -54,7 +54,7 @@ export function TodayDareScreen() {
   const [easierMode] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isAppActive, setIsAppActive] = useState(AppState.currentState === 'active');
-  const responsive = getDareResponsiveStyles(width, height, insets.bottom);
+  const responsive = getDareResponsiveStyles(width, height, insets.top, insets.bottom);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
@@ -299,16 +299,20 @@ function DareHeroCard({
       >
         <Pressable style={[styles.modalOverlay, responsive.modalOverlay]} onPress={() => setTipVisible(false)}>
           <Pressable style={[styles.modalContent, responsive.modalContent]} onPress={(e) => e.stopPropagation()}>
-            <ScrollView contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
-            <View style={styles.modalIconBox}>
-              <Lightbulb size={24} color="#111" strokeWidth={2.5} />
-            </View>
-            <Text style={styles.modalTitle}>Quick Tip</Text>
-            <Text style={styles.modalText}>{tipText}</Text>
-            
-            <Pressable style={styles.modalButton} onPress={() => setTipVisible(false)}>
-              <Text style={styles.modalButtonText}>Got it</Text>
-            </Pressable>
+            <ScrollView
+              style={styles.modalScroll}
+              contentContainerStyle={styles.modalScrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.modalIconBox}>
+                <Lightbulb size={24} color="#111" strokeWidth={2.5} />
+              </View>
+              <Text style={styles.modalTitle}>Quick Tip</Text>
+              <Text style={styles.modalText}>{tipText}</Text>
+
+              <Pressable style={styles.modalButton} onPress={() => setTipVisible(false)}>
+                <Text style={styles.modalButtonText}>Got it</Text>
+              </Pressable>
             </ScrollView>
           </Pressable>
         </Pressable>
@@ -533,7 +537,7 @@ function CompletedTodayScreen({ onGoHome, onBack }: { onGoHome: () => void; onBa
           completedStyles.content,
           compact && completedStyles.contentCompact,
           veryCompact && completedStyles.contentVeryCompact,
-          { paddingBottom: insets.bottom + (veryCompact ? 24 : 40) }
+          { paddingBottom: getBottomSafeSpace(insets.bottom) + (veryCompact ? 24 : 40) }
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -596,18 +600,22 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-function getDareResponsiveStyles(width: number, height: number, bottomInset: number) {
-  const shortScreen = height <= 720;
-  const veryShortScreen = height <= 640;
+function getDareResponsiveStyles(width: number, height: number, topInset: number, bottomInset: number) {
+  const availableHeight = Math.max(0, height - topInset);
+  const compactHeight = availableHeight <= 860;
+  const shortScreen = availableHeight <= 720;
+  const veryShortScreen = availableHeight <= 640;
   const narrowScreen = width <= 370;
   const horizontalPadding = clamp(width * 0.052, 16, 22);
-  const cardPadding = clamp(width * 0.056, 18, 24);
-  const titleSize = clamp(width * 0.085, narrowScreen ? 28 : 30, shortScreen ? 34 : 37);
-  const cardTopMargin = clamp(height * 0.024, 12, 22);
+  const cardPadding = clamp(width * (compactHeight ? 0.046 : 0.056), compactHeight ? 16 : 18, compactHeight ? 20 : 24);
+  const titleSize = clamp(width * (compactHeight ? 0.077 : 0.085), narrowScreen ? 27 : 29, compactHeight ? 31 : shortScreen ? 34 : 37);
+  const cardTopMargin = compactHeight ? clamp(availableHeight * 0.014, 8, 12) : clamp(availableHeight * 0.024, 12, 22);
   const cardRadius = clamp(width * 0.062, 22, 28);
   const compactActionLayout = width <= 360;
-  const actionMascotHeight = compactActionLayout ? 104 : clamp(height * 0.155, 114, 134);
-  const swipeButtonHeight = clamp(height * 0.076, veryShortScreen ? 58 : 60, 64);
+  const actionMascotHeight = compactHeight
+    ? compactActionLayout ? 76 : clamp(availableHeight * 0.105, 82, 96)
+    : compactActionLayout ? 104 : clamp(availableHeight * 0.155, 114, 134);
+  const swipeButtonHeight = clamp(availableHeight * (compactHeight ? 0.066 : 0.076), veryShortScreen ? 54 : compactHeight ? 56 : 60, compactHeight ? 58 : 64);
   const swipeButtonWidth = clamp(width * 0.78, compactActionLayout ? 246 : 274, 326);
   const swipeHandleInset = 5;
   const swipeHandleSize = swipeButtonHeight - swipeHandleInset * 2;
@@ -619,15 +627,17 @@ function getDareResponsiveStyles(width: number, height: number, bottomInset: num
   return {
     content: {
       paddingHorizontal: horizontalPadding,
-      paddingTop: clamp(height * 0.006, 4, 10),
-      paddingBottom: getTabBarReservedHeight(bottomInset),
-      minHeight: height
+      paddingTop: compactHeight ? 0 : clamp(availableHeight * 0.006, 4, 10),
+      paddingBottom: compactHeight
+        ? TAB_BAR_BASE_HEIGHT + getTabBarBottomOffset(bottomInset) + 8
+        : getTabBarReservedHeight(bottomInset),
+      minHeight: availableHeight
     },
     sectionHeader: {
       flexDirection: (narrowScreen ? 'column' : 'row') as 'column' | 'row',
       alignItems: (narrowScreen ? 'flex-start' : 'center') as 'flex-start' | 'center',
       justifyContent: 'space-between' as const,
-      marginTop: clamp(height * 0.03, 16, 28),
+      marginTop: compactHeight ? clamp(availableHeight * 0.018, 10, 14) : clamp(availableHeight * 0.03, 16, 28),
       gap: narrowScreen ? 8 : 12
     },
     brandTitle: {
@@ -644,9 +654,9 @@ function getDareResponsiveStyles(width: number, height: number, bottomInset: num
     heroCard: {
       borderRadius: cardRadius,
       paddingHorizontal: cardPadding,
-      paddingTop: clamp(height * 0.028, 18, 24),
-      paddingBottom: clamp(height * 0.027, 18, 24),
-      minHeight: veryShortScreen ? 262 : shortScreen ? 280 : 306,
+      paddingTop: compactHeight ? clamp(availableHeight * 0.02, 14, 17) : clamp(availableHeight * 0.028, 18, 24),
+      paddingBottom: compactHeight ? clamp(availableHeight * 0.02, 14, 17) : clamp(availableHeight * 0.027, 18, 24),
+      minHeight: compactHeight ? 0 : veryShortScreen ? 262 : shortScreen ? 280 : 306,
       transform: [{ rotate: width >= 390 ? '-0.7deg' : '0deg' }]
     },
     darePill: {
@@ -667,16 +677,16 @@ function getDareResponsiveStyles(width: number, height: number, bottomInset: num
       lineHeight: clamp(width * 0.054, 18, 21)
     },
     statsSection: {
-      marginTop: clamp(height * 0.026, 16, 22) + 8,
+      marginTop: compactHeight ? clamp(availableHeight * 0.018, 12, 15) : clamp(availableHeight * 0.026, 16, 22) + 8,
       paddingHorizontal: statsHorizontalPadding
     },
     dashCount,
     infoGrid: {
-      paddingTop: clamp(height * 0.016, 10, 13)
+      paddingTop: compactHeight ? 8 : clamp(availableHeight * 0.016, 10, 13)
     },
     infoIconSize: clamp(width * 0.044, 16, 19),
     infoIconSlot: {
-      height: clamp(height * 0.027, 18, 22)
+      height: compactHeight ? 17 : clamp(availableHeight * 0.027, 18, 22)
     },
     infoLabel: {
       fontSize: infoTextSize,
@@ -691,12 +701,12 @@ function getDareResponsiveStyles(width: number, height: number, bottomInset: num
       lineHeight: clamp(width * 0.039, 14, 16)
     },
     actionSection: {
-      marginTop: veryShortScreen ? 12 : 16,
+      marginTop: compactHeight ? 8 : veryShortScreen ? 12 : 16,
       paddingHorizontal: 0
     },
     actionMascot: {
       height: actionMascotHeight,
-      marginBottom: compactActionLayout ? 10 : 12
+      marginBottom: compactHeight ? 8 : compactActionLayout ? 10 : 12
     },
     swipeTrack: {
       width: swipeButtonWidth,
@@ -1129,15 +1139,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     alignItems: 'center',
+    alignSelf: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 10 },
     elevation: 10
   },
+  modalScroll: {
+    width: '100%',
+    flexGrow: 0
+  },
   modalScrollContent: {
-    alignItems: 'center',
-    flexGrow: 1
+    alignItems: 'center'
   },
   modalIconBox: {
     width: 48,

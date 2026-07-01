@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ArrowLeft } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 import { fonts } from '../constants/fonts';
+import { getBottomSafeSpace } from '../constants/layout';
 import type { AuthStackParamList } from '../navigation/types';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -47,6 +48,7 @@ export function LoginScreen({ navigation }: Props) {
   const mascotGap = veryCompact ? 20 : compact ? 32 : 50;
   const buttonGap = veryCompact ? 22 : compact ? 36 : 56;
   const termsGap = veryCompact ? 14 : compact ? 20 : 28;
+  const bottomSpace = getBottomSafeSpace(insets.bottom);
 
   function handleBack() {
     if (navigation.canGoBack()) {
@@ -66,7 +68,7 @@ export function LoginScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.screen} edges={['top']}>
       <Pressable
         accessibilityLabel="Go back"
         accessibilityRole="button"
@@ -83,7 +85,7 @@ export function LoginScreen({ navigation }: Props) {
           styles.content,
           {
             paddingTop: contentTop,
-            paddingBottom: insets.bottom + (veryCompact ? 18 : 28)
+            paddingBottom: bottomSpace + (veryCompact ? 18 : 28)
           }
         ]}
         showsVerticalScrollIndicator={false}

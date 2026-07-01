@@ -32,7 +32,6 @@ import { awardSharePoints } from '../db/repository';
 import { convertDareToCompletionText } from '../utils/dareText';
 import { captureScreenAsImage, saveScreenAsImage } from '../utils/downloadScreen';
 import { isShareTargetInstalled, shareImageToSocial } from '../utils/socialShare';
-import { XPAddAnimation } from '../components/XPAddAnimation';
 import { usePointsAnimationStore } from '../store/usePointsAnimationStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DareCompleted'>;
@@ -68,7 +67,6 @@ export function DareCompletedScreen({ navigation, route }: Props) {
   const posterRef = useRef<ViewShotRef>(null);
   const [busyAction, setBusyAction] = useState<'save' | 'whatsapp' | 'instagram' | null>(null);
   const [shareBonusAdded, setShareBonusAdded] = useState(false);
-  const [showRewardPopup, setShowRewardPopup] = useState(route.params.justCompleted ?? false);
   const responsive = getResponsiveStyles(width, height, insets.top, insets.bottom);
   const didTriggerInitialPoints = useRef(false);
 
@@ -76,31 +74,22 @@ export function DareCompletedScreen({ navigation, route }: Props) {
   const dareText = useMemo(() => convertDareToCompletionText(rawDareText), [rawDareText]);
   const completedTime = useMemo(() => formatCompletedTime(route.params.elapsedSeconds), [route.params.elapsedSeconds]);
   
-  const triggerAnimation = usePointsAnimationStore((state) => state.triggerAnimation);
+  const triggerPointsAdded = usePointsAnimationStore((state) => state.triggerPointsAdded);
 
   useEffect(() => {
-    if (!showRewardPopup && !route.params.justCompleted && !didTriggerInitialPoints.current) {
+    if (route.params.justCompleted && !didTriggerInitialPoints.current && profile) {
       didTriggerInitialPoints.current = true;
-      // If we are just viewing an already completed dare, trigger the floating animation on mount
       const totalEarned = route.params.basePoints + route.params.timingBonus + route.params.levelBonus;
-      triggerAnimation(totalEarned, width / 2 - 20, height / 2 + 100);
+      triggerPointsAdded(totalEarned, profile.total_points);
     }
   }, [
-    height,
+    profile,
     route.params.basePoints,
     route.params.justCompleted,
     route.params.levelBonus,
     route.params.timingBonus,
-    showRewardPopup,
-    triggerAnimation,
-    width
+    triggerPointsAdded
   ]);
-
-  const handlePopupComplete = () => {
-    setShowRewardPopup(false);
-    const totalEarned = route.params.basePoints + route.params.timingBonus + route.params.levelBonus;
-    triggerAnimation(totalEarned, width / 2 - 20, height / 2 + 100);
-  };
 
   async function handleShareBonus() {
     if (!user || shareBonusAdded) return;
@@ -109,7 +98,7 @@ export function DareCompletedScreen({ navigation, route }: Props) {
       if (pointsAwarded > 0) {
         setShareBonusAdded(true);
         if (updatedProfile) setProfile(updatedProfile);
-        triggerAnimation(pointsAwarded, width / 2 - 20, height / 2 + 150);
+        triggerPointsAdded(pointsAwarded, updatedProfile?.total_points);
       }
     } catch {
       return;
@@ -258,12 +247,6 @@ export function DareCompletedScreen({ navigation, route }: Props) {
         </View>
       </ScrollView>
 
-      {showRewardPopup && (
-        <XPAddAnimation
-          totalEarned={route.params.basePoints + route.params.timingBonus + route.params.levelBonus + (shareBonusAdded ? 25 : 0)}
-          onAnimationComplete={handlePopupComplete}
-        />
-      )}
     </SafeAreaView>
   );
 }

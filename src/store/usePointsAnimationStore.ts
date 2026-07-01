@@ -1,32 +1,24 @@
 import { create } from 'zustand';
 
-export type PointAnimation = {
+export type PointsAddedEvent = {
   id: string;
   amount: number;
-  startX: number;
-  startY: number;
+  targetTotal?: number;
 };
 
 type PointsAnimationState = {
-  animations: PointAnimation[];
-  triggerAnimation: (amount: number, startX: number, startY: number) => void;
-  removeAnimation: (id: string) => void;
-  badgePopTrigger: number;
-  triggerBadgePop: () => void;
+  pointsAddedEvent: PointsAddedEvent | null;
+  triggerPointsAdded: (amount: number, targetTotal?: number) => void;
+  clearPointsAddedEvent: (id: string) => void;
 };
 
 export const usePointsAnimationStore = create<PointsAnimationState>((set) => ({
-  animations: [],
-  triggerAnimation: (amount, startX, startY) => {
+  pointsAddedEvent: null,
+  triggerPointsAdded: (amount, targetTotal) => {
     const id = Math.random().toString(36).substring(2, 9);
-    set((state) => ({
-      animations: [...state.animations, { id, amount, startX, startY }]
-    }));
+    set({ pointsAddedEvent: { id, amount, targetTotal } });
   },
-  removeAnimation: (id) =>
-    set((state) => ({
-      animations: state.animations.filter((a) => a.id !== id)
-    })),
-  badgePopTrigger: 0,
-  triggerBadgePop: () => set((state) => ({ badgePopTrigger: state.badgePopTrigger + 1 }))
+  clearPointsAddedEvent: (id) => {
+    set((state) => (state.pointsAddedEvent?.id === id ? { pointsAddedEvent: null } : state));
+  }
 }));

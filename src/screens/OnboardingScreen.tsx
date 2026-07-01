@@ -14,10 +14,12 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronDown, Pencil } from 'lucide-react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { copy } from '../constants/copy';
 import { fonts } from '../constants/fonts';
+import { getBottomSafeSpace } from '../constants/layout';
 import { genderOptions, LIFE_CATEGORIES, LifeCategory } from '../constants/lifeCategories';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
@@ -30,6 +32,7 @@ const years = Array.from({ length: 101 }, (_, index) => String(currentYear - 100
 
 export function OnboardingScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
   const existingProfile = useProfileStore((state) => state.profile);
   const completeOnboarding = useProfileStore((state) => state.completeOnboarding);
@@ -145,7 +148,7 @@ export function OnboardingScreen() {
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: getBottomSafeSpace(insets.bottom) + 28 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
