@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import { makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 import type { User } from '@supabase/supabase-js';
 import { assertSupabaseConfigured, isSupabaseConfigured, supabase } from '../lib/supabase';
 import { useProfileStore } from './useProfileStore';
+
+const nativeOAuthRedirectUri = 'introvee://auth/callback';
 
 if (Platform.OS !== 'web') {
   WebBrowser.maybeCompleteAuthSession();
@@ -36,10 +37,7 @@ function getOAuthRedirectUri() {
     return configuredRedirectUri || window.location.origin;
   }
 
-  return makeRedirectUri({
-    scheme: 'introvee',
-    path: 'auth/callback'
-  });
+  return nativeOAuthRedirectUri;
 }
 
 function getWebOAuthCode() {

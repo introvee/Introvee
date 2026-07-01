@@ -30,7 +30,7 @@ https://tamdbugffrsearuizaqm.supabase.co/auth/v1/callback
 5. Add these redirect URLs in Supabase Auth URL settings:
 
 ```text
-bravestep://auth/callback
+introvee://auth/callback
 https://introvee.vercel.app/
 ```
 

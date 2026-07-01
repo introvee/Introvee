@@ -274,8 +274,8 @@ export function ProgressScreen() {
             resizeMode="contain"
           />
           <View style={s.donationCopy}>
-            <Text style={[s.donationSubtext, { fontSize: metrics.smallSize, lineHeight: metrics.smallSize + 4, marginBottom: veryCompact ? 2 : 4 }]} numberOfLines={veryCompact ? 1 : 2}>
-              Optional support for Introvee
+            <Text style={[s.donationSubtext, { fontSize: metrics.smallSize, lineHeight: metrics.smallSize + 4, marginBottom: veryCompact ? 2 : 4 }]} numberOfLines={2}>
+              Hey, I helped you build your confidence
             </Text>
             <Text style={[s.donationTitle, { fontSize: clamp(width * 0.05, 18, 23), lineHeight: clamp(width * 0.062, 23, 28), marginBottom: compact ? 7 : 12 }]} numberOfLines={1} adjustsFontSizeToFit>
               Support Introvee
