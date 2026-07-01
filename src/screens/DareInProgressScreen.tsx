@@ -9,7 +9,6 @@ import type { RootStackParamList } from '../navigation/types';
 import { saveCompletionSnapshot } from '../services/completionSnapshotService';
 import { completeDare } from '../services/dareService';
 import { useAuthStore } from '../store/useAuthStore';
-import { usePointsAnimationStore } from '../store/usePointsAnimationStore';
 import { useProfileStore } from '../store/useProfileStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DareInProgress'>;
@@ -35,11 +34,9 @@ export function DareInProgressScreen({ navigation, route }: Props) {
   const user = useAuthStore((state) => state.user);
   const profile = useProfileStore((state) => state.profile);
   const setProfile = useProfileStore((state) => state.setProfile);
-  const triggerPointsAdded = usePointsAnimationStore((state) => state.triggerPointsAdded);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [motivationIndex, setMotivationIndex] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
   const [isAppActive, setIsAppActive] = useState(AppState.currentState === 'active');
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const responsive = getProgressResponsiveStyles(width, height, insets.top, insets.bottom);
@@ -53,17 +50,17 @@ export function DareInProgressScreen({ navigation, route }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!isAppActive || isCompleted) return;
+    if (!isAppActive) return;
 
     const stopwatch = setInterval(() => {
       setElapsedSeconds((current) => current + 1);
     }, 1000);
 
     return () => clearInterval(stopwatch);
-  }, [isAppActive, isCompleted]);
+  }, [isAppActive]);
 
   useEffect(() => {
-    if (!isAppActive || isCompleted) {
+    if (!isAppActive) {
       fadeAnim.stopAnimation();
       return;
     }
@@ -93,7 +90,7 @@ export function DareInProgressScreen({ navigation, route }: Props) {
       fadeInAnimation?.stop();
       fadeAnim.stopAnimation();
     };
-  }, [fadeAnim, isAppActive, isCompleted]);
+  }, [fadeAnim, isAppActive]);
 
   const stopwatchText = useMemo(() => formatTime(elapsedSeconds), [elapsedSeconds]);
 
@@ -122,8 +119,19 @@ export function DareInProgressScreen({ navigation, route }: Props) {
         day: completedDay
       });
       setProfile(result.profile);
-      triggerPointsAdded(result.basePoints + result.timingBonus + result.levelBonus, result.profile.total_points);
-      setIsCompleted(true);
+      navigation.replace('DareCompleted', {
+        dare: route.params.dare,
+        basePoints: result.basePoints,
+        timingBonus: result.timingBonus,
+        levelBonus: result.levelBonus,
+        easier: route.params.easier,
+        elapsedSeconds,
+        completedAt,
+        completedLevel,
+        completedStage,
+        completedDay,
+        justCompleted: true
+      });
     } catch (error) {
       Alert.alert('Could not complete dare', error instanceof Error ? error.message : 'Please try again.');
     } finally {
@@ -164,17 +172,12 @@ export function DareInProgressScreen({ navigation, route }: Props) {
 
         <Pressable
           accessibilityRole="button"
-          disabled={isCompleting || isCompleted}
+          disabled={isCompleting}
           onPress={completeCurrentDare}
-          style={({ pressed }) => [
-            styles.doneButton,
-            responsive.doneButton,
-            pressed && !isCompleting && !isCompleted && styles.donePressed,
-            (isCompleting || isCompleted) && styles.disabled
-          ]}
+          style={({ pressed }) => [styles.doneButton, responsive.doneButton, pressed && !isCompleting && styles.donePressed, isCompleting && styles.disabled]}
         >
           {isCompleting ? <ActivityIndicator color="#FFFFFF" size="small" /> : null}
-          <Text style={styles.doneText}>{isCompleting ? 'Finishing...' : isCompleted ? 'Completed' : 'I did it'}</Text>
+          <Text style={styles.doneText}>{isCompleting ? 'Finishing...' : 'I did it'}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

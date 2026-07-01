@@ -32,6 +32,7 @@ https://tamdbugffrsearuizaqm.supabase.co/auth/v1/callback
 ```text
 introvee://auth/callback
 https://introvee.vercel.app/
+http://localhost:8083/
 ```
 
 For production web, set the Supabase Site URL to:
@@ -40,13 +41,20 @@ For production web, set the Supabase Site URL to:
 https://introvee.vercel.app/
 ```
 
-For local Expo web testing, you can temporarily add the localhost URL shown in your terminal to Supabase Redirect URLs.
+For local Expo web testing, this repo currently uses:
+
+```text
+http://localhost:8083/
+```
+
+Add that URL to Supabase Redirect URLs while testing locally.
 
 6. Add these environment variables before starting Expo:
 
 ```bash
 EXPO_PUBLIC_SUPABASE_URL=your-project-url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+EXPO_PUBLIC_AUTH_REDIRECT_URL=https://introvee.vercel.app/
 ```
 
 ## Install

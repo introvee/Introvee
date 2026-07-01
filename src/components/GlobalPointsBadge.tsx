@@ -1,130 +1,113 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Star } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '../store/useProfileStore';
 import { usePointsAnimationStore } from '../store/usePointsAnimationStore';
 import { fonts } from '../constants/fonts';
 
-const countDuration = 760;
-
 export function GlobalPointsBadge() {
   const profile = useProfileStore((state) => state.profile);
-  const pointsAddedEvent = usePointsAnimationStore((state) => state.pointsAddedEvent);
-  const clearPointsAddedEvent = usePointsAnimationStore((state) => state.clearPointsAddedEvent);
+  const badgePopTrigger = usePointsAnimationStore((state) => state.badgePopTrigger);
   const insets = useSafeAreaInsets();
   
   const scale = useRef(new Animated.Value(1)).current;
-  const bubbleOpacity = useRef(new Animated.Value(0)).current;
-  const bubbleTranslateY = useRef(new Animated.Value(0)).current;
-  const bubbleScale = useRef(new Animated.Value(0.94)).current;
   const [displayPoints, setDisplayPoints] = useState(profile?.total_points || 0);
-  const [bubbleText, setBubbleText] = useState('');
-  const lastEventId = useRef<string | null>(null);
+  const lastSettledPoints = useRef(profile?.total_points || 0);
+  const hasLoadedInitialPoints = useRef(profile?.total_points !== undefined);
 
   useEffect(() => {
-    if (!profile || pointsAddedEvent) return;
+    if (profile?.total_points === undefined) return;
 
-    if (displayPoints !== profile.total_points) {
-      setDisplayPoints(profile.total_points);
+    const nextPoints = profile.total_points;
+    const previousPoints = lastSettledPoints.current;
+
+    if (!hasLoadedInitialPoints.current) {
+      hasLoadedInitialPoints.current = true;
+      lastSettledPoints.current = nextPoints;
+      setDisplayPoints(nextPoints);
+      return;
     }
-  }, [displayPoints, pointsAddedEvent, profile]);
 
-  useEffect(() => {
-    if (!profile || !pointsAddedEvent || lastEventId.current === pointsAddedEvent.id) return;
+    if (nextPoints === previousPoints) {
+      setDisplayPoints(nextPoints);
+      return;
+    }
 
-    lastEventId.current = pointsAddedEvent.id;
-    const targetPoints = pointsAddedEvent.targetTotal ?? profile.total_points;
-    const startPoints = Math.max(0, targetPoints - pointsAddedEvent.amount);
-    const startedAt = Date.now();
-    let animationFrame: number | null = null;
-    let bounceAnimation: Animated.CompositeAnimation | null = null;
-    let bubbleAnimation: Animated.CompositeAnimation | null = null;
+    const duration = 1050;
+    const startTime = Date.now();
+    let animationFrame: number;
     let mounted = true;
+    const digitCount = Math.max(String(Math.max(previousPoints, nextPoints)).length, 2);
 
-    setBubbleText(`+${pointsAddedEvent.amount}`);
-    bubbleOpacity.setValue(0);
-    bubbleTranslateY.setValue(0);
-    bubbleScale.setValue(0.94);
+    const rollNumber = () => {
+      const progress = Math.min(1, (Date.now() - startTime) / duration);
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
 
-    const animateCount = () => {
-      const progress = Math.min((Date.now() - startedAt) / countDuration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const nextPoints = Math.round(startPoints + (targetPoints - startPoints) * eased);
-
-      if (mounted) setDisplayPoints(nextPoints);
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animateCount);
-        return;
+      if (mounted) {
+        if (progress < 0.72) {
+          const min = digitCount > 1 ? 10 ** (digitCount - 1) : 0;
+          const max = 10 ** digitCount - 1;
+          setDisplayPoints(Math.floor(min + Math.random() * (max - min + 1)));
+        } else {
+          setDisplayPoints(Math.round(previousPoints + (nextPoints - previousPoints) * easeProgress));
+        }
       }
 
-      bounceAnimation = Animated.sequence([
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(rollNumber);
+      } else if (mounted) {
+        lastSettledPoints.current = nextPoints;
+        setDisplayPoints(nextPoints);
+      }
+    };
+
+    const popAnimation = Animated.sequence([
+      Animated.timing(scale, {
+        toValue: 1.14,
+        duration: 150,
+        useNativeDriver: true
+      }),
+      Animated.spring(scale, {
+        toValue: 1,
+        friction: 5,
+        tension: 60,
+        useNativeDriver: true
+      })
+    ]);
+
+    animationFrame = requestAnimationFrame(rollNumber);
+    popAnimation.start();
+
+    return () => {
+      mounted = false;
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      popAnimation.stop();
+    };
+  }, [profile?.total_points, scale]);
+
+  useEffect(() => {
+    let animation: Animated.CompositeAnimation | null = null;
+    if (badgePopTrigger > 0) {
+      animation = Animated.sequence([
         Animated.timing(scale, {
-          toValue: 1.08,
-          duration: 110,
-          easing: Easing.out(Easing.quad),
+          toValue: 1.12,
+          duration: 130,
           useNativeDriver: true
         }),
         Animated.spring(scale, {
           toValue: 1,
-          friction: 6,
-          tension: 90,
+          friction: 5,
+          tension: 60,
           useNativeDriver: true
         })
       ]);
-
-      bubbleAnimation = Animated.sequence([
-        Animated.parallel([
-          Animated.timing(bubbleOpacity, {
-            toValue: 1,
-            duration: 140,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true
-          }),
-          Animated.timing(bubbleTranslateY, {
-            toValue: -5,
-            duration: 140,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true
-          }),
-          Animated.spring(bubbleScale, {
-            toValue: 1,
-            friction: 7,
-            tension: 120,
-            useNativeDriver: true
-          })
-        ]),
-        Animated.delay(640),
-        Animated.parallel([
-          Animated.timing(bubbleOpacity, {
-            toValue: 0,
-            duration: 220,
-            easing: Easing.in(Easing.quad),
-            useNativeDriver: true
-          }),
-          Animated.timing(bubbleTranslateY, {
-            toValue: -12,
-            duration: 220,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true
-          })
-        ])
-      ]);
-
-      bounceAnimation.start();
-      bubbleAnimation.start(() => clearPointsAddedEvent(pointsAddedEvent.id));
-    };
-
-    animationFrame = requestAnimationFrame(animateCount);
-
+      animation.start();
+    }
     return () => {
-      mounted = false;
-      if (animationFrame !== null) cancelAnimationFrame(animationFrame);
-      bounceAnimation?.stop();
-      bubbleAnimation?.stop();
+      animation?.stop();
     };
-  }, [bubbleOpacity, bubbleScale, bubbleTranslateY, clearPointsAddedEvent, pointsAddedEvent, profile, scale]);
+  }, [badgePopTrigger, scale]);
 
   if (!profile) return null;
 
@@ -139,18 +122,6 @@ export function GlobalPointsBadge() {
         <Star size={12} color="#000" fill="#000" />
       </View>
       <Text style={styles.pointsText}>{displayPoints}</Text>
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.bubble,
-          {
-            opacity: bubbleOpacity,
-            transform: [{ translateY: bubbleTranslateY }, { scale: bubbleScale }]
-          }
-        ]}
-      >
-        <Text style={styles.bubbleText}>{bubbleText}</Text>
-      </Animated.View>
     </Animated.View>
   );
 }
@@ -169,8 +140,7 @@ const styles = StyleSheet.create({
     boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.18)',
     elevation: 5,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.28)',
-    zIndex: 20
+    borderColor: 'rgba(255, 255, 255, 0.28)'
   },
   iconContainer: {
     backgroundColor: '#FFFFFF',
@@ -185,27 +155,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fonts.bold,
     lineHeight: 18,
-    letterSpacing: 0
-  },
-  bubble: {
-    position: 'absolute',
-    top: -22,
-    right: 8,
-    minWidth: 36,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: 'rgba(17, 17, 17, 0.86)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.34)'
-  },
-  bubbleText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    lineHeight: 13,
-    fontFamily: fonts.bold,
-    letterSpacing: 0
+    letterSpacing: 0.5
   }
 });

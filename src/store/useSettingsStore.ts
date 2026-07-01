@@ -24,6 +24,7 @@ const defaultSettings: UserSettings = {
   donation_popup_enabled: true,
 };
 
+const devBypassUserId = '00000000-0000-4000-8000-000000000001';
 let remoteSettingsUnavailable = false;
 let loadedSettingsUserId: string | null = null;
 let settingsFetchUserId: string | null = null;
@@ -59,6 +60,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   isLoading: false,
 
   fetchSettings: async (userId: string) => {
+    if (userId === devBypassUserId) {
+      loadedSettingsUserId = userId;
+      set({ settings: defaultSettings, isLoading: false });
+      return;
+    }
+
     const currentSettings = get().settings;
     if (currentSettings && loadedSettingsUserId === userId) {
       return;
@@ -157,6 +164,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
     try {
       await writeLocalSettings(userId, nextSettings);
+
+      if (userId === devBypassUserId) {
+        return;
+      }
 
       if (remoteSettingsUnavailable) {
         return;

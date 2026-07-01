@@ -4,8 +4,11 @@ import { Platform } from 'react-native';
 import type { User } from '@supabase/supabase-js';
 import { assertSupabaseConfigured, isSupabaseConfigured, supabase } from '../lib/supabase';
 import { useProfileStore } from './useProfileStore';
+import type { Profile } from '../types/profile';
 
 const nativeOAuthRedirectUri = 'introvee://auth/callback';
+const bypassGoogleLogin = false;
+const devUserId = '00000000-0000-4000-8000-000000000001';
 
 if (Platform.OS !== 'web') {
   WebBrowser.maybeCompleteAuthSession();
@@ -21,6 +24,45 @@ type AuthState = {
 };
 
 let bootstrapPromise: Promise<void> | null = null;
+
+function getDevUser(): User {
+  return {
+    id: devUserId,
+    aud: 'authenticated',
+    role: 'authenticated',
+    email: 'dev@introvee.local',
+    app_metadata: { provider: 'dev-bypass', providers: ['dev-bypass'] },
+    user_metadata: { name: 'Dev User' },
+    created_at: new Date(0).toISOString()
+  } as User;
+}
+
+function getDevProfile(): Profile {
+  const now = new Date().toISOString();
+
+  return {
+    id: devUserId,
+    name: 'Dev User',
+    age: 21,
+    dob: null,
+    gender: 'Prefer not to say',
+    life_category: 'Student',
+    avatar_url: null,
+    onboarding_completed: true,
+    current_level: 1,
+    current_stage: 1,
+    current_day: 1,
+    total_points: 0,
+    streak_count: 0,
+    created_at: now,
+    updated_at: now
+  };
+}
+
+function applyDevBypass(setAuthState: (state: Partial<AuthState>) => void) {
+  setAuthState({ user: getDevUser(), isBootstrapping: false, isSigningIn: false });
+  useProfileStore.getState().setProfile(getDevProfile());
+}
 
 async function loadProfileSafely(userId: string) {
   try {
@@ -62,6 +104,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (bootstrapPromise) return bootstrapPromise;
 
     bootstrapPromise = (async () => {
+      if (bypassGoogleLogin) {
+        applyDevBypass(set);
+        return;
+      }
+
       if (!isSupabaseConfigured) {
         set({ user: null, isBootstrapping: false });
         return;
@@ -112,6 +159,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   loginWithGoogle: async () => {
     set({ isSigningIn: true });
     try {
+      if (bypassGoogleLogin) {
+        applyDevBypass(set);
+        return;
+      }
+
       assertSupabaseConfigured();
       const redirectTo = getOAuthRedirectUri();
 
@@ -171,13 +223,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
   logout: async () => {
+    if (bypassGoogleLogin) {
+      applyDevBypass(set);
+      return;
+    }
+
     await supabase.auth.signOut();
     set({ user: null, isBootstrapping: false });
     useProfileStore.getState().setProfile(null);
   }
 }));
 
-if (isSupabaseConfigured) {
+if (isSupabaseConfigured && !bypassGoogleLogin) {
   supabase.auth.onAuthStateChange(async (event, session) => {
     try {
       if (event === 'SIGNED_IN' && session?.user) {

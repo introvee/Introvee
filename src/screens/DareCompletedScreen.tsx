@@ -1,10 +1,8 @@
-import { forwardRef, useMemo, useRef, useState, useEffect } from 'react';
+import { forwardRef, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   Image,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -32,7 +30,6 @@ import { awardSharePoints } from '../db/repository';
 import { convertDareToCompletionText } from '../utils/dareText';
 import { captureScreenAsImage, saveScreenAsImage } from '../utils/downloadScreen';
 import { isShareTargetInstalled, shareImageToSocial } from '../utils/socialShare';
-import { usePointsAnimationStore } from '../store/usePointsAnimationStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DareCompleted'>;
 
@@ -57,6 +54,7 @@ const posterTitleEmergencyMinFontSize = 10;
 const titleSoftBreak = '\u200B';
 const dareShareMessage = `I just completed today’s dare on Introvee. Try this app and start your confidence journey.
 ${storyLink}`;
+const devBypassUserId = '00000000-0000-4000-8000-000000000001';
 
 export function DareCompletedScreen({ navigation, route }: Props) {
   const { width, height } = useWindowDimensions();
@@ -68,37 +66,20 @@ export function DareCompletedScreen({ navigation, route }: Props) {
   const [busyAction, setBusyAction] = useState<'save' | 'whatsapp' | 'instagram' | null>(null);
   const [shareBonusAdded, setShareBonusAdded] = useState(false);
   const responsive = getResponsiveStyles(width, height, insets.top, insets.bottom);
-  const didTriggerInitialPoints = useRef(false);
 
   const rawDareText = route.params.easier ? route.params.dare.easier_title : route.params.dare.title;
   const dareText = useMemo(() => convertDareToCompletionText(rawDareText), [rawDareText]);
   const completedTime = useMemo(() => formatCompletedTime(route.params.elapsedSeconds), [route.params.elapsedSeconds]);
-  
-  const triggerPointsAdded = usePointsAnimationStore((state) => state.triggerPointsAdded);
-
-  useEffect(() => {
-    if (route.params.justCompleted && !didTriggerInitialPoints.current && profile) {
-      didTriggerInitialPoints.current = true;
-      const totalEarned = route.params.basePoints + route.params.timingBonus + route.params.levelBonus;
-      triggerPointsAdded(totalEarned, profile.total_points);
-    }
-  }, [
-    profile,
-    route.params.basePoints,
-    route.params.justCompleted,
-    route.params.levelBonus,
-    route.params.timingBonus,
-    triggerPointsAdded
-  ]);
 
   async function handleShareBonus() {
     if (!user || shareBonusAdded) return;
+    if (user.id === devBypassUserId) return;
+
     try {
       const { pointsAwarded, profile: updatedProfile } = await awardSharePoints(user.id, route.params.dare.id, false);
       if (pointsAwarded > 0) {
         setShareBonusAdded(true);
         if (updatedProfile) setProfile(updatedProfile);
-        triggerPointsAdded(pointsAwarded, updatedProfile?.total_points);
       }
     } catch {
       return;
@@ -246,7 +227,6 @@ export function DareCompletedScreen({ navigation, route }: Props) {
           </Pressable>
         </View>
       </ScrollView>
-
     </SafeAreaView>
   );
 }
@@ -702,17 +682,6 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
     justifyContent: 'center'
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  popupContainer: {
-    width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: 20
   },
   closeButton: {
     position: 'absolute',
