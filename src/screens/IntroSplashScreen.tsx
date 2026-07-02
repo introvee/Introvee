@@ -18,6 +18,10 @@ export function IntroSplashScreen({ navigation }: Props) {
   const mascotWidth = veryCompact ? 145 : Math.min(165, Math.max(145, width * 0.423));
   const mascotHeight = Math.round(mascotWidth * (230 / 165));
   const bottomSpace = getBottomSafeSpace(insets.bottom);
+  const topPadding = Math.min(60, Math.max(40, height * 0.065));
+  const mascotBottomGap = Math.min(32, Math.max(24, height * 0.038));
+  const textGroupGap = Math.min(16, Math.max(10, height * 0.018));
+  const buttonTopGap = veryCompact ? Math.min(58, Math.max(48, height * 0.078)) : Math.min(75, Math.max(55, height * 0.083));
 
   function openLogin() {
     navigation.replace('Login');
@@ -30,16 +34,23 @@ export function IntroSplashScreen({ navigation }: Props) {
           styles.content,
           compact && styles.contentCompact,
           veryCompact && styles.contentVeryCompact,
-          { paddingBottom: bottomSpace + (veryCompact ? 62 : compact ? 74 : 90) }
+          {
+            paddingTop: topPadding,
+            paddingBottom: bottomSpace + (veryCompact ? 34 : compact ? 44 : 54)
+          }
         ]}
       >
-        <Image source={introCharacter} style={[styles.mascot, compact && styles.mascotCompact, { width: mascotWidth, height: mascotHeight }]} resizeMode="contain" />
+        <Image
+          source={introCharacter}
+          style={[styles.mascot, { width: mascotWidth, height: mascotHeight, marginBottom: mascotBottomGap }]}
+          resizeMode="contain"
+        />
 
-        <Text style={[styles.title, compact && styles.titleCompact]}>
+        <Text style={[styles.title, compact && styles.titleCompact, { marginBottom: textGroupGap }]}>
           Hey!{'\n'}
           You got this.
         </Text>
-        <View style={[styles.subtitleBlock, compact && styles.subtitleBlockCompact]}>
+        <View style={styles.subtitleBlock}>
           <View style={styles.subtitleLine}>
             <Text style={[styles.subtitleText, compact && styles.subtitleTextCompact]}>Become an</Text>
             <View style={styles.highlightBlock}>
@@ -49,7 +60,12 @@ export function IntroSplashScreen({ navigation }: Props) {
           </View>
         </View>
 
-        <Pressable accessibilityLabel="Continue" accessibilityRole="button" onPress={openLogin} style={({ pressed }) => [styles.nextButton, compact && styles.nextButtonCompact, pressed && styles.nextPressed]}>
+        <Pressable
+          accessibilityLabel="Continue"
+          accessibilityRole="button"
+          onPress={openLogin}
+          style={({ pressed }) => [styles.nextButton, compact && styles.nextButtonCompact, { marginTop: buttonTopGap }, pressed && styles.nextPressed]}
+        >
           <ArrowRight color="#FFFFFF" size={34} strokeWidth={2.5} />
         </Pressable>
       </View>
@@ -76,13 +92,7 @@ const styles = StyleSheet.create({
     paddingBottom: 26
   },
   mascot: {
-    alignSelf: 'center',
-    marginTop: 120,
-    marginBottom: 75
-  },
-  mascotCompact: {
-    marginTop: 70,
-    marginBottom: 52
+    alignSelf: 'center'
   },
   title: {
     width: '80%',
@@ -93,7 +103,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: fonts.regular,
     fontWeight: '400',
-    marginBottom: 32
+    marginBottom: 14
   },
   titleCompact: {
     fontSize: 32,
@@ -102,11 +112,7 @@ const styles = StyleSheet.create({
   subtitleBlock: {
     width: '86%',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 85
-  },
-  subtitleBlockCompact: {
-    marginBottom: 58
+    gap: 8
   },
   subtitleLine: {
     flexDirection: 'row',
@@ -155,7 +161,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#2A1715',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 'auto',
     shadowColor: '#2A1715',
     shadowOpacity: 0.08,
     shadowRadius: 10,

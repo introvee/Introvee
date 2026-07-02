@@ -32,6 +32,7 @@ const UPI_ID = '9962046078-2@axl';
 const PAYPAL_EMAIL = 'karthickvaanam94@gmail.com';
 const localizationWithLegacyRegion = Localization as typeof Localization & { region?: string };
 const INDIA_TIME_ZONES = new Set(['Asia/Kolkata', 'Asia/Calcutta']);
+const AMOUNT_WITH_CURRENCY_PATTERN = /[₹$€£¥]|[a-z]/i;
 
 type Props = {
   visible: boolean;
@@ -63,23 +64,26 @@ export function DonationModal({ visible, onClose }: Props) {
 
   const handleDonate = async () => {
     const amount = selectedAmount === 'custom' ? customAmount.trim() : selectedAmount;
-    const numericAmount = Number(amount);
 
     if (!selectedAmount) {
       Alert.alert(isIndia ? 'Donation amount' : 'Support amount', 'Please select an amount');
       return;
     }
 
-    if (!amount || Number.isNaN(numericAmount) || numericAmount <= 0) {
+    const formattedAmount = formatDonationAmount(amount);
+
+    if (!formattedAmount) {
       Alert.alert('Invalid amount', 'Please enter a valid amount');
       return;
     }
 
     if (isIndia) {
       try {
+        const payeeAddress = UPI_ID;
         const payeeName = encodeURIComponent('KARTHICK K');
         const transactionNote = encodeURIComponent('Introvee Support');
-        const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${payeeName}&am=${numericAmount}&cu=INR&tn=${transactionNote}`;
+        const upiUrl = `upi://pay?pa=${payeeAddress}&pn=${payeeName}&am=${formattedAmount}&cu=INR&tn=${transactionNote}`;
+        console.log('Generated UPI URL:', upiUrl);
         await Linking.openURL(upiUrl);
         onClose();
       } catch (error) {
@@ -88,7 +92,7 @@ export function DonationModal({ visible, onClose }: Props) {
     } else {
       try {
         const itemName = encodeURIComponent('Introvee Support');
-        const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=${PAYPAL_EMAIL}&item_name=${itemName}&amount=${numericAmount}&currency_code=USD`;
+        const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=${PAYPAL_EMAIL}&item_name=${itemName}&amount=${formattedAmount}&currency_code=USD`;
         await Linking.openURL(paypalUrl);
         onClose();
       } catch (error) {
@@ -305,4 +309,20 @@ function getDonationCountryCode() {
   if (regionCode) return regionCode.toUpperCase();
 
   return 'US';
+}
+
+function formatDonationAmount(amount: string | null) {
+  const trimmedAmount = amount?.trim();
+
+  if (!trimmedAmount || AMOUNT_WITH_CURRENCY_PATTERN.test(trimmedAmount)) {
+    return null;
+  }
+
+  const numericAmount = Number(trimmedAmount);
+
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    return null;
+  }
+
+  return numericAmount.toFixed(2);
 }
