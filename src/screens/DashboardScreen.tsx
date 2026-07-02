@@ -18,26 +18,26 @@ import type { UserDareLog } from '../types/dare';
 type Nav = BottomTabNavigationProp<MainTabParamList>;
 
 const levelCovers: Record<number, number> = {
-  1: require('../../assets/images/level-1-cover.png'),
-  2: require('../../assets/images/level-2-cover.png'),
-  3: require('../../assets/images/level-3-cover.png'),
-  4: require('../../assets/images/level-4-cover.png'),
-  5: require('../../assets/images/level-5-cover.png'),
-  6: require('../../assets/images/level-6-cover.png'),
-  7: require('../../assets/images/level-7-cover.png'),
-  8: require('../../assets/images/level-8-cover.png'),
-  9: require('../../assets/images/level-9-cover.png'),
-  10: require('../../assets/images/level-10-cover.png'),
-  11: require('../../assets/images/level-11-cover.png'),
-  12: require('../../assets/images/level-12-cover.png'),
-  13: require('../../assets/images/level-13-cover.png'),
-  14: require('../../assets/images/level-14-cover.png'),
-  15: require('../../assets/images/level-15-cover.png'),
-  16: require('../../assets/images/level-16-cover.png'),
-  17: require('../../assets/images/level-17-cover.png'),
-  18: require('../../assets/images/level-18-cover.png'),
-  19: require('../../assets/images/level-19-cover.png'),
-  20: require('../../assets/images/level-20-cover.png')
+  1: require('../../assets/images/level-1-cover.jpg'),
+  2: require('../../assets/images/level-2-cover.jpg'),
+  3: require('../../assets/images/level-3-cover.jpg'),
+  4: require('../../assets/images/level-4-cover.jpg'),
+  5: require('../../assets/images/level-5-cover.jpg'),
+  6: require('../../assets/images/level-6-cover.jpg'),
+  7: require('../../assets/images/level-7-cover.jpg'),
+  8: require('../../assets/images/level-8-cover.jpg'),
+  9: require('../../assets/images/level-9-cover.jpg'),
+  10: require('../../assets/images/level-10-cover.jpg'),
+  11: require('../../assets/images/level-11-cover.jpg'),
+  12: require('../../assets/images/level-12-cover.jpg'),
+  13: require('../../assets/images/level-13-cover.jpg'),
+  14: require('../../assets/images/level-14-cover.jpg'),
+  15: require('../../assets/images/level-15-cover.jpg'),
+  16: require('../../assets/images/level-16-cover.jpg'),
+  17: require('../../assets/images/level-17-cover.jpg'),
+  18: require('../../assets/images/level-18-cover.jpg'),
+  19: require('../../assets/images/level-19-cover.jpg'),
+  20: require('../../assets/images/level-20-cover.jpg')
 };
 
 const stageCount = 5;
