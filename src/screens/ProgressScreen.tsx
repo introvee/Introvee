@@ -24,9 +24,10 @@ import { fonts } from '../constants/fonts';
 import { getTabBarBottomOffset, TAB_BAR_BASE_HEIGHT } from '../constants/layout';
 import { getLevelTitle } from '../constants/levelTitles';
 import { clamp, getResponsivePageMetrics } from '../constants/responsive';
-import { getBadgeCount } from '../services/progressService';
+import { getCompletedDareCount } from '../services/dareService';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
+import { getCompletedDaresFromProgress, getConfidencePercent } from '../utils/progressStats';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -97,24 +98,24 @@ export function ProgressScreen() {
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const profile = useProfileStore((s) => s.profile);
-  const [badgeCount, setBadgeCount] = useState(0);
+  const [completedDareCount, setCompletedDareCount] = useState(0);
   const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
   const [hasInitializedExpandedLevel, setHasInitializedExpandedLevel] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     let active = true;
-    getBadgeCount(user.id)
-      .then((count) => {
-        if (active) setBadgeCount(count);
+    getCompletedDareCount(user.id)
+      .then((completed) => {
+        if (active) setCompletedDareCount(completed);
       })
       .catch(() => {
-        if (active) setBadgeCount(0);
+        if (active) setCompletedDareCount(0);
       });
     return () => {
       active = false;
     };
-  }, [user?.id]);
+  }, [user?.id, profile?.current_level, profile?.current_stage, profile?.current_day]);
 
   // Set default expanded level once profile loads
   useEffect(() => {
@@ -126,9 +127,8 @@ export function ProgressScreen() {
 
   if (!profile) return null;
 
-  const completedLevels = Math.max(profile.current_level - 1, 0);
-  const completedStages = completedLevels * 5 + Math.max(profile.current_stage - 1, 0);
-  const progressPct = Math.min(Math.round((completedStages / 100) * 100), 99);
+  const completedDares = getCompletedDaresFromProgress(profile, completedDareCount);
+  const progressPct = getConfidencePercent(completedDares);
 
   const metrics = getResponsivePageMetrics(width, height);
   const hPad = metrics.horizontalPadding;

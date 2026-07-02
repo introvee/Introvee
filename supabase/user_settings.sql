@@ -29,3 +29,9 @@ on public.user_settings
 for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own settings" on public.user_settings;
+create policy "Users can delete own settings"
+on public.user_settings
+for delete
+using (auth.uid() = user_id);

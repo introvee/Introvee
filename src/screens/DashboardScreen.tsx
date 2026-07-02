@@ -11,6 +11,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
 import type { MainTabParamList } from '../navigation/types';
 import type { UserDareLog } from '../types/dare';
+import { getCompletedDaresFromProgress, getCompletedStagesInCurrentLevel, getConfidencePercent } from '../utils/progressStats';
 
 type Nav = BottomTabNavigationProp<MainTabParamList>;
 
@@ -108,10 +109,10 @@ export function DashboardScreen() {
   }
 
   const currentLevel = clamp(profile?.current_level ?? 1, 1, 20);
-  const stageInLevel = clamp(profile?.current_stage ?? 1, 1, 5);
-  const completedStagesInLevel = getCompletedStagesInLevel(stageInLevel, currentLevel, completedDares, todaysLog);
+  const completedDareTotal = profile ? getCompletedDaresFromProgress(profile, completedDares, todaysLog) : completedDares;
+  const completedStagesInLevel = getCompletedStagesInCurrentLevel(completedDareTotal, currentLevel);
   const currentDay = clamp(profile?.current_day ?? 1, 1, 100);
-  const confidence = Math.min(Math.max(Math.round((completedDares / 100) * 100), 0), 100);
+  const confidence = getConfidencePercent(completedDareTotal);
   const responsive = getDashboardResponsiveStyles(width, height, insets.bottom);
 
   return (
@@ -170,7 +171,7 @@ export function DashboardScreen() {
         <View style={[styles.combinedStatsCard, responsive.combinedStatsCard]}>
           {[
             { label: 'Streak', value: profile?.streak_count ?? 0, icon: <Flame size={16} color="rgba(255,255,255,0.7)" strokeWidth={1.8} /> },
-            { label: 'Dares', value: completedDares, icon: <CheckCircle2 size={16} color="rgba(255,255,255,0.7)" strokeWidth={1.8} /> },
+            { label: 'Dares', value: completedDareTotal, icon: <CheckCircle2 size={16} color="rgba(255,255,255,0.7)" strokeWidth={1.8} /> },
             { label: 'Confidence', value: `${confidence}%`, icon: <Heart size={16} color="rgba(255,255,255,0.7)" strokeWidth={1.8} /> }
           ].map((stat, i, arr) => (
             <View key={stat.label} style={[styles.statCol, i < arr.length - 1 && styles.statColBorder]}>
@@ -333,13 +334,6 @@ function SwipeToStart({
 }
 
 
-
-function getCompletedStagesInLevel(stageInLevel: number, currentLevel: number, completedDares: number, todaysLog: UserDareLog | null) {
-  const completedBeforeLevel = (currentLevel - 1) * 5;
-  const logBased = clamp(completedDares - completedBeforeLevel, 0, 5);
-  const profileBased = currentLevel === 20 && stageInLevel === 5 && (todaysLog?.status === 'completed' || todaysLog?.status === 'easier_completed') ? 5 : Math.max(stageInLevel - 1, 0);
-  return Math.max(logBased, profileBased);
-}
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);

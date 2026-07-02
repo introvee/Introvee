@@ -50,19 +50,17 @@ export function SettingsScreen() {
     try {
       const userId = user.id;
 
-      // Clean up app data
-      await supabase.from("user_dare_logs").delete().eq("user_id", userId);
-      await supabase.from("user_badges").delete().eq("user_id", userId);
-      await supabase.from("user_settings").delete().eq("user_id", userId);
-      await supabase.from("profiles").delete().eq("id", userId);
-
-      // Call edge function to delete auth user
+      // Delete the auth user first. Database foreign keys cascade app data from auth.users.
       const { error: invokeError } = await supabase.functions.invoke('delete-user', {
         method: 'POST',
       });
 
       if (invokeError) {
-        Alert.alert("Notice", "App data deleted, but there was an issue completely removing the account. Please contact support.");
+        const appDataDeleted = await cleanupAppData(userId);
+        if (!appDataDeleted) {
+          Alert.alert('Error', 'Could not delete your account. Please try again.');
+          return;
+        }
       }
 
       // Sign out locally
@@ -204,6 +202,30 @@ export function SettingsScreen() {
       </Modal>
     </View>
   );
+}
+
+async function cleanupAppData(userId: string) {
+  const [profileImagesDeleted, ...deletes] = await Promise.all([
+    cleanupProfileImages(userId),
+    supabase.from('user_dare_logs').delete().eq('user_id', userId),
+    supabase.from('user_badges').delete().eq('user_id', userId),
+    supabase.from('user_settings').delete().eq('user_id', userId),
+    supabase.from('points_transactions').delete().eq('user_id', userId),
+    supabase.from('profiles').delete().eq('id', userId)
+  ]);
+
+  return profileImagesDeleted && deletes.every((result) => !result.error);
+}
+
+async function cleanupProfileImages(userId: string) {
+  const { data, error } = await supabase.storage.from('profile-images').list(userId);
+  if (error) return false;
+
+  const paths = (data ?? []).filter((item) => item.name).map((item) => `${userId}/${item.name}`);
+  if (paths.length === 0) return true;
+
+  const { error: removeError } = await supabase.storage.from('profile-images').remove(paths);
+  return !removeError;
 }
 
 const styles = StyleSheet.create({

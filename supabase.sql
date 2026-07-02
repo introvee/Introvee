@@ -143,6 +143,16 @@ with check (
   and auth.uid()::text = (storage.foldername(name))[1]
 );
 
+drop policy if exists "Users can delete their profile images" on storage.objects;
+create policy "Users can delete their profile images"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'profile-images'
+  and auth.uid()::text = (storage.foldername(name))[1]
+);
+
 drop policy if exists "Authenticated users can read dares" on public.dares;
 create policy "Authenticated users can read dares"
 on public.dares
@@ -172,6 +182,13 @@ for select
 to authenticated
 using (auth.uid() = user_id);
 
+drop policy if exists "Users delete their badges" on public.user_badges;
+create policy "Users delete their badges"
+on public.user_badges
+for delete
+to authenticated
+using (auth.uid() = user_id);
+
 drop policy if exists "Users can view own transactions" on public.points_transactions;
 create policy "Users can view own transactions"
 on public.points_transactions
@@ -185,6 +202,13 @@ on public.points_transactions
 for insert
 to authenticated
 with check (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own transactions" on public.points_transactions;
+create policy "Users can delete own transactions"
+on public.points_transactions
+for delete
+to authenticated
+using (auth.uid() = user_id);
 
 create or replace function public.reconcile_profile_points(
   p_user_id uuid
@@ -438,3 +462,10 @@ for update
 to authenticated
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own settings" on public.user_settings;
+create policy "Users can delete own settings"
+on public.user_settings
+for delete
+to authenticated
+using (auth.uid() = user_id);
