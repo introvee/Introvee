@@ -126,7 +126,7 @@ export function DashboardScreen() {
       >
           <View style={[styles.greetingBlock, responsive.greetingBlock]}>
             <Text style={[styles.greetingTime, responsive.greetingTime]} numberOfLines={1} adjustsFontSizeToFit>
-              Hello,
+              Hello
             </Text>
             <View style={styles.greetingNameRow}>
               <Text style={[styles.greetingName, responsive.greetingName]} numberOfLines={1} adjustsFontSizeToFit>
