@@ -199,7 +199,7 @@ export async function awardPoints(
   });
 
   if (error) {
-    return { pointsAwarded: 0, profile: null };
+    throw error;
   }
 
   const pointsAwarded = data as number;
@@ -227,21 +227,43 @@ export async function completeDare(userId: string, profile: Profile, dare: Dare,
   }
 
   const progress = nextProgress(profile.current_level, profile.current_stage);
-  
-  // Award points sequentially
-  const { pointsAwarded: basePoints } = await awardPoints(userId, 50, 'stage_completed', {}, profile.current_level, profile.current_stage);
-  
+
+  let basePoints = 0;
+  let actualTimingBonus = 0;
+  let levelBonus = 0;
+
   let timingBonus = 5;
   if (elapsedSeconds <= 60) timingBonus = 30;
   else if (elapsedSeconds <= 180) timingBonus = 20;
   else if (elapsedSeconds <= 300) timingBonus = 10;
-  
-  const { pointsAwarded: actualTimingBonus } = await awardPoints(userId, timingBonus, 'timing_bonus', {}, null, null, dare.id);
-  
-  let levelBonus = 0;
-  if (progress.completedLevel) {
-    const { pointsAwarded: actualLevelBonus } = await awardPoints(userId, 150, 'level_completed', {}, profile.current_level);
-    levelBonus = actualLevelBonus;
+
+  try {
+    const { pointsAwarded } = await awardPoints(userId, STAGE_BONUS_POINTS, 'stage_completed', {}, profile.current_level, profile.current_stage);
+    basePoints = pointsAwarded;
+
+    const { pointsAwarded: awardedTimingBonus } = await awardPoints(userId, timingBonus, 'timing_bonus', {}, null, null, dare.id);
+    actualTimingBonus = awardedTimingBonus;
+
+    if (progress.completedLevel) {
+      const { pointsAwarded: actualLevelBonus } = await awardPoints(userId, 150, 'level_completed', {}, profile.current_level);
+      levelBonus = actualLevelBonus;
+    }
+  } catch {
+    const fallbackBasePoints = basePoints > 0 ? 0 : STAGE_BONUS_POINTS;
+    const fallbackTimingBonus = actualTimingBonus > 0 ? 0 : timingBonus;
+    const fallbackLevelBonus = progress.completedLevel && levelBonus <= 0 ? 150 : 0;
+    const fallbackTotal = fallbackBasePoints + fallbackTimingBonus + fallbackLevelBonus;
+
+    if (fallbackTotal > 0) {
+      const latestProfile = (await getProfile(userId)) ?? profile;
+      await updateProfileProgress(userId, {
+        total_points: latestProfile.total_points + fallbackTotal
+      });
+
+      basePoints += fallbackBasePoints;
+      actualTimingBonus += fallbackTimingBonus;
+      levelBonus += fallbackLevelBonus;
+    }
   }
 
   const totalEarned = basePoints + actualTimingBonus + levelBonus;
