@@ -186,6 +186,28 @@ for insert
 to authenticated
 with check (auth.uid() = user_id);
 
+create or replace function public.reconcile_profile_points(
+  p_user_id uuid
+) returns integer as $$
+declare
+  v_transaction_total integer := 0;
+begin
+  select coalesce(sum(points), 0)::integer
+  into v_transaction_total
+  from public.points_transactions
+  where user_id = p_user_id;
+
+  update public.profiles
+  set
+    total_points = greatest(coalesce(total_points, 0), v_transaction_total),
+    updated_at = now()
+  where id = p_user_id
+    and coalesce(total_points, 0) < v_transaction_total;
+
+  return v_transaction_total;
+end;
+$$ language plpgsql security definer set search_path = public;
+
 create or replace function public.award_points(
   p_user_id uuid,
   p_points integer,
@@ -206,6 +228,7 @@ begin
         and level_number = p_level_number
         and stage_number = p_stage_number
     ) then
+      perform public.reconcile_profile_points(p_user_id);
       return 0;
     end if;
   elsif p_type = 'level_completed' then
@@ -215,6 +238,7 @@ begin
         and type = 'level_completed'
         and level_number = p_level_number
     ) then
+      perform public.reconcile_profile_points(p_user_id);
       return 0;
     end if;
   elsif p_type = 'timing_bonus' then
@@ -224,6 +248,7 @@ begin
         and type = 'timing_bonus'
         and dare_id = p_dare_id
     ) then
+      perform public.reconcile_profile_points(p_user_id);
       return 0;
     end if;
   elsif p_type = 'dare_shared' then
@@ -233,6 +258,7 @@ begin
         and type = 'dare_shared'
         and dare_id = p_dare_id
     ) then
+      perform public.reconcile_profile_points(p_user_id);
       return 0;
     end if;
   elsif p_type = 'app_shared' then
@@ -242,6 +268,7 @@ begin
         and type = 'app_shared'
         and created_at >= current_date
     ) then
+      perform public.reconcile_profile_points(p_user_id);
       return 0;
     end if;
   end if;
@@ -252,12 +279,45 @@ begin
   v_points_awarded := p_points;
 
   update public.profiles
-  set total_points = coalesce(total_points, 0) + v_points_awarded
+  set
+    total_points = coalesce(total_points, 0) + v_points_awarded,
+    updated_at = now()
   where id = p_user_id;
 
   return v_points_awarded;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
+
+update public.profiles p
+set
+  total_points = greatest(
+    coalesce(p.total_points, 0),
+    coalesce(t.transaction_total, 0),
+    coalesce(t.log_total, 0),
+    greatest(coalesce(p.current_day, 1) - 1, 0) * 50
+  ),
+  updated_at = now()
+from (
+  select
+    p2.id as user_id,
+    coalesce(sum(pt.points), 0)::integer as transaction_total,
+    coalesce(logs.log_total, 0)::integer as log_total
+  from public.profiles p2
+  left join public.points_transactions pt on pt.user_id = p2.id
+  left join (
+    select user_id, sum(points_earned)::integer as log_total
+    from public.user_dare_logs
+    where status in ('completed', 'easier_completed')
+    group by user_id
+  ) logs on logs.user_id = p2.id
+  group by p2.id, logs.log_total
+ ) t
+where p.id = t.user_id
+  and coalesce(p.total_points, 0) < greatest(
+    coalesce(t.transaction_total, 0),
+    coalesce(t.log_total, 0),
+    greatest(coalesce(p.current_day, 1) - 1, 0) * 50
+  );
 
 insert into public.badges (id, name, description, unlock_condition, icon)
 values

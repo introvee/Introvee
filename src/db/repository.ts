@@ -208,7 +208,28 @@ export async function awardPoints(
     return { pointsAwarded, profile: updatedProfile };
   }
 
-  return { pointsAwarded: 0, profile: null };
+  const reconciledProfile = await reconcileProfilePoints(userId);
+  return { pointsAwarded: 0, profile: reconciledProfile };
+}
+
+export async function reconcileProfilePoints(userId: string): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from('points_transactions')
+    .select('points')
+    .eq('user_id', userId);
+
+  if (error) throw error;
+
+  const transactionTotal = (data ?? []).reduce((sum, row) => sum + Number(row.points ?? 0), 0);
+  const profile = await getProfile(userId);
+
+  if (!profile || transactionTotal <= profile.total_points) {
+    return profile;
+  }
+
+  return updateProfileProgress(userId, {
+    total_points: transactionTotal
+  });
 }
 
 export async function awardSharePoints(userId: string, dareId: string | null, isAppShare = false): Promise<{ pointsAwarded: number; profile: Profile | null }> {
@@ -267,6 +288,7 @@ export async function completeDare(userId: string, profile: Profile, dare: Dare,
   }
 
   const totalEarned = basePoints + actualTimingBonus + levelBonus;
+  await reconcileProfilePoints(userId);
   const now = new Date().toISOString();
 
   const { error: logError } = await supabase.from('user_dare_logs').insert({
