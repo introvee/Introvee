@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     alignSelf: 'center',
-    borderRadius: 16,
+    borderRadius: 999,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

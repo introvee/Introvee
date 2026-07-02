@@ -27,8 +27,6 @@ const C = {
   danger: '#D85B50',
 };
 
-const buttonRadius = 16;
-
 export function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
@@ -102,7 +100,7 @@ export function SettingsScreen() {
 
         {/* Section 2: App */}
         <Text style={styles.sectionTitle}>App</Text>
-        <View style={[styles.card, { borderRadius: buttonRadius, paddingHorizontal: metrics.cardPadding }]}>
+        <View style={[styles.card, { borderRadius: metrics.cardRadius, paddingHorizontal: metrics.cardPadding }]}>
           <TouchableOpacity style={[styles.navRow, styles.borderBottom]} onPress={() => navigation.navigate('HelpSupport')}>
             <Text style={[styles.rowTitle, { fontSize: metrics.bodySize }]}>Help / Support</Text>
             <ChevronRight size={20} color={C.muted} />
@@ -123,7 +121,7 @@ export function SettingsScreen() {
 
         {/* Section 3: Account */}
         <Text style={styles.sectionTitle}>Account</Text>
-        <View style={[styles.card, { borderRadius: buttonRadius, paddingHorizontal: metrics.cardPadding }]}>
+        <View style={[styles.card, { borderRadius: metrics.cardRadius, paddingHorizontal: metrics.cardPadding }]}>
           <TouchableOpacity style={styles.navRow} onPress={() => setDeleteModalVisible(true)}>
             <View style={styles.rowLeftInline}>
               <Trash2 size={20} color={C.danger} />
@@ -138,7 +136,7 @@ export function SettingsScreen() {
       {/* Delete Account Modal */}
       <Modal visible={deleteModalVisible} transparent animationType="fade">
         <View style={[styles.modalOverlay, { paddingHorizontal: metrics.horizontalPadding, paddingTop: insets.top + 16, paddingBottom: bottomSpace + 16 }]}>
-          <View style={[styles.modalContent, { maxWidth: metrics.maxWidth, maxHeight: modalMaxHeight, borderRadius: buttonRadius }]}>
+          <View style={[styles.modalContent, { maxWidth: metrics.maxWidth, maxHeight: modalMaxHeight, borderRadius: metrics.cardRadius }]}>
             <ScrollView
               contentContainerStyle={{ padding: metrics.cardPadding }}
               showsVerticalScrollIndicator={false}
@@ -273,7 +271,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: C.white,
-    borderRadius: buttonRadius,
+    borderRadius: 24,
     shadowColor: C.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
@@ -331,7 +329,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: C.white,
-    borderRadius: buttonRadius,
+    borderRadius: 24,
     width: '100%',
     shadowColor: C.shadow,
     shadowOffset: { width: 0, height: 8 },
@@ -367,7 +365,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: C.bg,
     paddingVertical: 16,
-    borderRadius: buttonRadius,
+    borderRadius: 16,
     alignItems: 'center',
   },
   cancelButtonText: {
@@ -380,7 +378,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: C.danger,
     paddingVertical: 16,
-    borderRadius: buttonRadius,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -394,7 +392,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.bg,
     borderWidth: 1,
     borderColor: C.border,
-    borderRadius: buttonRadius,
+    borderRadius: 16,
     padding: 16,
     fontSize: 16,
     fontFamily: displayFont,

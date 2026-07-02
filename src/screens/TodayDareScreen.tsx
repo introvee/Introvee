@@ -388,7 +388,7 @@ function SwipeConfirmButton({
   const translateX = useRef(new Animated.Value(0)).current;
   const currentX = useRef(0);
   const hasConfirmed = useRef(false);
-  const trackStyle = responsive.swipeTrack ?? { width: 300, height: 60, borderRadius: 16, padding: 5 };
+  const trackStyle = responsive.swipeTrack ?? { width: 300, height: 60, borderRadius: 30, padding: 5 };
   const handleStyle = responsive.swipeHandle ?? { width: 50, height: 50, borderRadius: 25 };
   const metrics = responsive.swipeMetrics ?? { travelDistance: 240, iconSize: 18 };
   const travelDistance = metrics.travelDistance;
@@ -711,7 +711,7 @@ function getDareResponsiveStyles(width: number, height: number, topInset: number
     swipeTrack: {
       width: swipeButtonWidth,
       height: swipeButtonHeight,
-      borderRadius: 16,
+      borderRadius: swipeButtonHeight / 2,
       padding: swipeHandleInset
     },
     swipeHandle: {
@@ -1419,7 +1419,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 13,
     opacity: 0.58,

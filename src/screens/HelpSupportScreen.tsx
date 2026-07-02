@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   
   primaryButton: {
     backgroundColor: C.dark,
-    borderRadius: 16,
+    borderRadius: 999,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
