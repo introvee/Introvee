@@ -91,6 +91,20 @@ function EditProfileModal({ visible, onClose, profile, onSave }: { visible: bool
             <Text style={styles.inputLabel}>Name</Text>
             <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor={colors.muted} placeholder="Your name" />
           </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Gender</Text>
+            <View style={styles.readOnlyField}>
+              <Text style={styles.readOnlyText}>{profile.gender || 'Not set'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Life Category</Text>
+            <View style={styles.readOnlyField}>
+              <Text style={styles.readOnlyText}>{profile.life_category || 'Not set'}</Text>
+            </View>
+          </View>
         </ScrollView>
 
         <View style={[styles.modalFooter, { paddingBottom: getBottomSafeSpace(insets.bottom) + 20 }]}>
@@ -511,6 +525,20 @@ const styles = StyleSheet.create({
     color: C.text,
     borderWidth: 1,
     borderColor: C.border
+  },
+  readOnlyField: {
+    backgroundColor: '#F3F3F3',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: C.border
+  },
+  readOnlyText: {
+    fontSize: 16,
+    fontFamily: displayFont,
+    fontWeight: '500',
+    color: C.sub
   },
   
   dropdownField: {
