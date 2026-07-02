@@ -31,6 +31,7 @@ const C = {
 const UPI_ID = '9962046078-2@axl';
 const PAYPAL_EMAIL = 'karthickvaanam94@gmail.com';
 const localizationWithLegacyRegion = Localization as typeof Localization & { region?: string };
+const INDIA_TIME_ZONES = new Set(['Asia/Kolkata', 'Asia/Calcutta']);
 
 type Props = {
   visible: boolean;
@@ -46,9 +47,7 @@ export function DonationModal({ visible, onClose }: Props) {
   const modalPadding = clamp(width * 0.055, 18, 22);
   const bottomSpace = getBottomSafeSpace(insets.bottom);
 
-  const [countryCode] = useState<string>(
-    (localizationWithLegacyRegion.region || Localization.getLocales?.()[0]?.regionCode || 'US').toUpperCase()
-  );
+  const [countryCode] = useState(getDonationCountryCode);
 
   const isIndia = countryCode === 'IN';
   const donationCurrency = isIndia ? 'INR' : 'USD';
@@ -293,3 +292,17 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
 });
+
+function getDonationCountryCode() {
+  const locales = Localization.getLocales?.() ?? [];
+  const calendars = Localization.getCalendars?.() ?? [];
+  const regionCode = localizationWithLegacyRegion.region || locales[0]?.regionCode || locales[0]?.languageRegionCode;
+  const currencyCode = locales[0]?.currencyCode || locales[0]?.languageCurrencyCode;
+  const timeZone = calendars[0]?.timeZone;
+
+  if (currencyCode?.toUpperCase() === 'INR') return 'IN';
+  if (timeZone && INDIA_TIME_ZONES.has(timeZone)) return 'IN';
+  if (regionCode) return regionCode.toUpperCase();
+
+  return 'US';
+}

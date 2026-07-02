@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator, Platform, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronRight, User, Lock, Bell, Globe, Info, Palette, Calendar, HelpCircle, Shield, FileText, LogOut, Edit3, Camera, X, Trophy, Flame, Target, Settings } from 'lucide-react-native';
@@ -11,17 +11,19 @@ import { clamp, getResponsivePageMetrics } from '../constants/responsive';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
 import type { Profile } from '../types/profile';
-import { LIFE_CATEGORIES, LifeCategory, genderOptions } from '../constants/lifeCategories';
 
 function EditProfileModal({ visible, onClose, profile, onSave }: { visible: boolean; onClose: () => void; profile: Profile; onSave: (data: Partial<Profile> & { avatar_uri?: string }) => Promise<void> }) {
   const [name, setName] = useState(profile.name);
-  const [gender, setGender] = useState(profile.gender);
-  const [lifeCategory, setLifeCategory] = useState<LifeCategory | ''>((profile.life_category as LifeCategory) ?? '');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<'gender' | 'role' | null>(null);
 
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (!visible) return;
+    setName(profile.name);
+    setAvatarUri(null);
+  }, [profile.name, visible]);
 
   async function handlePickImage() {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -37,8 +39,8 @@ function EditProfileModal({ visible, onClose, profile, onSave }: { visible: bool
   }
 
   async function handleSave() {
-    if (!name.trim() || !gender.trim() || !lifeCategory.trim()) {
-      Alert.alert('Validation Error', 'Please fill in all required fields.');
+    if (!name.trim()) {
+      Alert.alert('Validation Error', 'Please add your name.');
       return;
     }
 
@@ -46,8 +48,6 @@ function EditProfileModal({ visible, onClose, profile, onSave }: { visible: bool
     try {
       await onSave({
         name: name.trim(),
-        gender: gender.trim(),
-        life_category: lifeCategory as LifeCategory,
         avatar_uri: avatarUri || undefined
       });
       Alert.alert('Success', 'Profile updated successfully.');
@@ -91,20 +91,6 @@ function EditProfileModal({ visible, onClose, profile, onSave }: { visible: bool
             <Text style={styles.inputLabel}>Name</Text>
             <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor={colors.muted} placeholder="Your name" />
           </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Gender</Text>
-            <TouchableOpacity style={styles.dropdownField} onPress={() => setOpenDropdown('gender')}>
-              <Text style={[styles.dropdownText, !gender && styles.placeholderText]}>{gender || 'Select gender'}</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Life Category</Text>
-            <TouchableOpacity style={styles.dropdownField} onPress={() => setOpenDropdown('role')}>
-              <Text style={[styles.dropdownText, !lifeCategory && styles.placeholderText]}>{lifeCategory || 'Select your vibe / role'}</Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
 
         <View style={[styles.modalFooter, { paddingBottom: getBottomSafeSpace(insets.bottom) + 20 }]}>
@@ -114,27 +100,6 @@ function EditProfileModal({ visible, onClose, profile, onSave }: { visible: bool
         </View>
       </View>
 
-      <Modal visible={openDropdown !== null} transparent animationType="fade" onRequestClose={() => setOpenDropdown(null)}>
-        <TouchableOpacity style={styles.dropdownOverlay} activeOpacity={1} onPress={() => setOpenDropdown(null)}>
-          <TouchableOpacity style={styles.dropdownMenu} activeOpacity={1}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {(openDropdown === 'gender' ? genderOptions : LIFE_CATEGORIES).map((option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={styles.dropdownOption}
-                  onPress={() => {
-                    if (openDropdown === 'gender') setGender(option);
-                    if (openDropdown === 'role') setLifeCategory(option as LifeCategory);
-                    setOpenDropdown(null);
-                  }}
-                >
-                  <Text style={styles.dropdownOptionText}>{option}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
     </Modal>
   );
 }

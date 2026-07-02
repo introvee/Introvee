@@ -1,7 +1,7 @@
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 
-type MediaLibraryModule = typeof import('expo-media-library');
+type MediaLibraryModule = typeof import('expo-media-library/legacy');
 
 export async function captureScreenAsImage(element: unknown, filename: string) {
   if (!element) {
@@ -18,7 +18,7 @@ export async function captureScreenAsImage(element: unknown, filename: string) {
 
 async function getMediaLibraryModule() {
   try {
-    return (await import('expo-media-library')) as MediaLibraryModule;
+    return (await import('expo-media-library/legacy')) as MediaLibraryModule;
   } catch {
     return null;
   }

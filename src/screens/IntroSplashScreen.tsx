@@ -30,7 +30,7 @@ export function IntroSplashScreen({ navigation }: Props) {
           styles.content,
           compact && styles.contentCompact,
           veryCompact && styles.contentVeryCompact,
-          { paddingBottom: bottomSpace + (veryCompact ? 42 : compact ? 52 : 64) }
+          { paddingBottom: bottomSpace + (veryCompact ? 62 : compact ? 74 : 90) }
         ]}
       >
         <Image source={introCharacter} style={[styles.mascot, compact && styles.mascotCompact, { width: mascotWidth, height: mascotHeight }]} resizeMode="contain" />

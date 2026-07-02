@@ -1,9 +1,14 @@
+import * as ImageManipulator from 'expo-image-manipulator';
 import { copy } from '../constants/copy';
 import { supabase } from '../lib/supabase';
 import type { Dare, UserDareLog } from '../types/dare';
 import type { OnboardingInput, Profile } from '../types/profile';
 import { nextProgress, STAGE_BONUS_POINTS } from '../utils/points';
 import { makeId } from './ids';
+
+const PROFILE_AVATAR_MAX_BYTES = 100 * 1024;
+const PROFILE_AVATAR_QUALITY_STEPS = [0.82, 0.72, 0.62, 0.52, 0.42, 0.32, 0.24, 0.18];
+const PROFILE_AVATAR_SIZE_STEPS = [512, 448, 384, 320, 256, 192, 160];
 
 const DARE_SELECT_COLUMNS = [
   'id',
@@ -65,10 +70,7 @@ export async function saveOnboardingProfile(userId: string, input: OnboardingInp
 }
 
 async function uploadProfileAvatar(userId: string, imageUri: string) {
-  const response = await fetch(imageUri);
-  if (!response.ok) throw new Error('Could not read the selected profile image.');
-
-  const imageData = await response.arrayBuffer();
+  const imageData = await compressProfileAvatar(imageUri);
   const storagePath = `${userId}/avatar-${Date.now()}.jpg`;
   const { error } = await supabase.storage.from('profile-images').upload(storagePath, imageData, {
     contentType: 'image/jpeg',
@@ -79,6 +81,33 @@ async function uploadProfileAvatar(userId: string, imageUri: string) {
 
   const { data } = supabase.storage.from('profile-images').getPublicUrl(storagePath);
   return data.publicUrl;
+}
+
+async function compressProfileAvatar(imageUri: string) {
+  let smallestImageData: ArrayBuffer | null = null;
+
+  for (const size of PROFILE_AVATAR_SIZE_STEPS) {
+    for (const quality of PROFILE_AVATAR_QUALITY_STEPS) {
+      const image = await ImageManipulator.manipulateAsync(
+        imageUri,
+        [{ resize: { width: size, height: size } }],
+        { compress: quality, format: ImageManipulator.SaveFormat.JPEG }
+      );
+      const response = await fetch(image.uri);
+      if (!response.ok) throw new Error('Could not read the selected profile image.');
+
+      const imageData = await response.arrayBuffer();
+      if (!smallestImageData || imageData.byteLength < smallestImageData.byteLength) {
+        smallestImageData = imageData;
+      }
+      if (imageData.byteLength <= PROFILE_AVATAR_MAX_BYTES) {
+        return imageData;
+      }
+    }
+  }
+
+  const smallestSizeKb = smallestImageData ? Math.ceil(smallestImageData.byteLength / 1024) : 0;
+  throw new Error(`Could not compress the selected profile image below 100 KB. Smallest size was ${smallestSizeKb} KB.`);
 }
 
 export async function updateProfileDetails(userId: string, input: Partial<Profile> & { avatar_uri?: string }) {
