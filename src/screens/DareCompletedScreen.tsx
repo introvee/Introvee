@@ -42,7 +42,7 @@ type SharePosterProps = {
 };
 
 const lime = '#C9FF35';
-const storyLink = 'https://introvee.vercel.app/';
+const storyLink = 'https://introvee.com/';
 const posterBaseWidth = 350;
 const posterBaseHeight = 438;
 const posterAspectRatio = posterBaseHeight / posterBaseWidth;
