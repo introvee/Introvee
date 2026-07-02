@@ -133,9 +133,6 @@ export function DashboardScreen() {
                 {profile?.name || 'Friend'}
               </Text>
             </View>
-            <Text style={[styles.subtitle, responsive.subtitle]} numberOfLines={1} adjustsFontSizeToFit>
-              You're doing great. One step at a time.
-            </Text>
           </View>
 
         <View style={[styles.levelCard, responsive.levelCard]}>
@@ -383,12 +380,12 @@ function getDashboardResponsiveStyles(width: number, height: number, bottomInset
     topRow: { marginBottom: greetingBottom },
     greetingBlock: { marginBottom: greetingBottom },
     greetingTime: {
-      fontSize: clamp(width * 0.065, 20, 24),
-      lineHeight: clamp(width * 0.08, 26, 30)
+      fontSize: clamp(width * 0.038, 14, 16),
+      lineHeight: clamp(width * 0.052, 18, 22)
     },
     greetingName: {
-      fontSize: clamp(width * 0.085, 28, 34),
-      lineHeight: clamp(width * 0.09, 32, 38)
+      fontSize: clamp(width * 0.052, 18, 22),
+      lineHeight: clamp(width * 0.067, 24, 28)
     },
     subtitle: {
       fontSize: clamp(width * 0.035, compactHeight ? 12 : 14, 15),
@@ -508,18 +505,18 @@ const styles = StyleSheet.create({
   greetingBlock: { marginBottom: 20 },
   greetingTime: {
     color: poster.text,
-    fontSize: 26,
-    lineHeight: 32,
+    fontSize: 15,
+    lineHeight: 20,
     fontFamily: displayFont,
-    fontWeight: '500',
+    fontWeight: '400',
     letterSpacing: 0,
     flexShrink: 1
   },
   greetingNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%', marginTop: 2 },
   greetingName: {
     color: poster.text,
-    fontSize: 38,
-    lineHeight: 44,
+    fontSize: 20,
+    lineHeight: 26,
     fontFamily: displayFont,
     fontWeight: '700',
     letterSpacing: 0,

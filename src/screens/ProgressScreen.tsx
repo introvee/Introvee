@@ -207,9 +207,6 @@ export function ProgressScreen() {
         {/* Title row */}
         <View style={s.titleRow}>
           <Text style={[s.pageTitle, { fontSize: metrics.headerTitleSize }]}>Progress</Text>
-          <View style={[s.analyticsBtn, { width: compact ? 34 : 36, height: compact ? 34 : 36 }]}>
-            <BarChart2 size={15} color={C.text} strokeWidth={1.9} />
-          </View>
         </View>
 
         {/* Stats card */}
@@ -394,7 +391,6 @@ const s = StyleSheet.create({
   // Title row
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   pageTitle: { color: C.text, fontSize: 20, lineHeight: 26, fontFamily: fonts.bold, fontWeight: '700', letterSpacing: -0.2 },
-  analyticsBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F2F2F2', alignItems: 'center', justifyContent: 'center', shadowColor: C.shadow, shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
 
   // Stats card
   statsCard: { backgroundColor: C.dark, borderRadius: 18, flexDirection: 'row', paddingVertical: 18, shadowColor: C.shadow, shadowOpacity: 0.2, shadowRadius: 14, shadowOffset: { width: 0, height: 5 }, elevation: 4 },
