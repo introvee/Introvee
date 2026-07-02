@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
   swipePill: {
     width: '90%',
     height: 58,
-    borderRadius: 999,
+    borderRadius: 16,
     backgroundColor: '#F7F7F5',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: poster.border,

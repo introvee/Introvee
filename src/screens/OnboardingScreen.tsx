@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   continueButton: {
     width: '85%',
     height: 58,
-    borderRadius: 29,
+    borderRadius: 16,
     backgroundColor: tokens.button,
     alignItems: 'center',
     justifyContent: 'center',
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   },
   dateDoneButton: {
     height: 48,
-    borderRadius: 24,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: tokens.button,

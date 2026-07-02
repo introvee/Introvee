@@ -740,7 +740,7 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     width: '100%',
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(17,17,17,0.08)',
     flexDirection: 'row',

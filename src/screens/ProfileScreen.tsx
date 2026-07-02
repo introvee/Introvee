@@ -221,7 +221,7 @@ export function ProfileScreen() {
           <StatBlock icon={Target} value={profile.current_stage} label="Current Stage" compact={compact} />
         </View>
 
-        <View style={[styles.menuCard, { borderRadius: compact ? 20 : 24, paddingHorizontal: compact ? 16 : 20, paddingVertical: compact ? 4 : 8 }]}>
+        <View style={[styles.menuCard, { borderRadius: 16, paddingHorizontal: compact ? 16 : 20, paddingVertical: compact ? 4 : 8 }]}>
           <MenuItem icon={User} label="Age" value={profile.age} compact={compact} />
           <MenuItem icon={Info} label="Gender" value={profile.gender} compact={compact} />
           <MenuItem icon={Globe} label="Life Category" value={profile.life_category} compact={compact} />
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
 
   logoutButton: {
     backgroundColor: C.white,
-    borderRadius: 18,
+    borderRadius: 16,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -597,6 +597,6 @@ const styles = StyleSheet.create({
   },
   
   modalFooter: { paddingHorizontal: 20, paddingTop: 16, backgroundColor: C.bg, borderTopWidth: 1, borderTopColor: C.border },
-  saveButton: { backgroundColor: C.text, borderRadius: 18, paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
+  saveButton: { backgroundColor: C.text, borderRadius: 16, paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
   saveButtonText: { color: C.white, fontSize: 16, fontFamily: displayFont, fontWeight: '700' }
 });

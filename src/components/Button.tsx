@@ -41,7 +41,7 @@ export function Button({ title, onPress, variant = 'primary', disabled, icon, st
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: 14,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
