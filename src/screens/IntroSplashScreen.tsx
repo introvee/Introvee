@@ -40,7 +40,13 @@ export function IntroSplashScreen({ navigation }: Props) {
           You got this.
         </Text>
         <View style={[styles.subtitleBlock, compact && styles.subtitleBlockCompact]}>
-          <Text style={[styles.subtitleText, compact && styles.subtitleTextCompact]}>Become an extrovert in 100 days</Text>
+          <View style={styles.subtitleLine}>
+            <Text style={[styles.subtitleText, compact && styles.subtitleTextCompact]}>Become an</Text>
+            <View style={styles.highlightBlock}>
+              <Text style={[styles.highlightText, compact && styles.highlightTextCompact]}>extrovert</Text>
+            </View>
+            <Text style={[styles.subtitleText, compact && styles.subtitleTextCompact]}>in 100 days</Text>
+          </View>
         </View>
 
         <Pressable accessibilityLabel="Continue" accessibilityRole="button" onPress={openLogin} style={({ pressed }) => [styles.nextButton, compact && styles.nextButtonCompact, pressed && styles.nextPressed]}>
