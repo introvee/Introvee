@@ -1,17 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Alert, Animated, Image, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Image, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { ArrowRight, CheckCircle2, Flame, Heart, Sparkles, X } from 'lucide-react-native';
+import { ArrowRight, CheckCircle2, Flame, Heart } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getCompletedDareCount, getTodaysDareLog } from '../services/dareService';
 import { getTabBarBottomOffset, getTabBarReservedHeight, TAB_BAR_BASE_HEIGHT } from '../constants/layout';
 import { getLevelTitle } from '../constants/levelTitles';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
-import { useSettingsStore } from '../store/useSettingsStore';
-import { DonationModal } from '../components/DonationModal';
 import type { MainTabParamList } from '../navigation/types';
 import type { UserDareLog } from '../types/dare';
 
@@ -42,267 +39,16 @@ const levelCovers: Record<number, number> = {
 
 const stageCount = 5;
 const swipeInset = 5;
-const donationPopupImage = require('../../assets/images/popup.png');
-const donationMascotSeenPrefix = 'introvee:donation-mascot-seen';
 
 export function DashboardScreen() {
   const navigation = useNavigation<Nav>();
-  const isFocused = useIsFocused();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
   const profile = useProfileStore((state) => state.profile);
-  const settings = useSettingsStore((state) => state.settings);
-  const fetchSettings = useSettingsStore((state) => state.fetchSettings);
   const [todaysLog, setTodaysLog] = useState<UserDareLog | null>(null);
   const [completedDares, setCompletedDares] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [showDonateMascot, setShowDonateMascot] = useState(false);
-  const [isDraggingMascot, setIsDraggingMascot] = useState(false);
-  const [donatePopupVisible, setDonatePopupVisible] = useState(false);
-  const [mascotDismissed, setMascotDismissed] = useState(false);
-  const [donationMascotCooldownPassed, setDonationMascotCooldownPassed] = useState(false);
-
-  const mascotSize = clamp(width * 0.18, 68, 86);
-  const mascotOverlayWidth = mascotSize;
-  const mascotOverlayHeight = mascotSize;
-  const mascotTop = clamp(height * 0.118, 88, 106);
-  const mascotRight = clamp(width * 0.012, 4, 10);
-  const initialMascotPosition = useMemo(
-    () => ({
-      x: Math.max(width - mascotOverlayWidth - mascotRight, 0),
-      y: mascotTop
-    }),
-    [mascotOverlayWidth, mascotRight, mascotTop, width]
-  );
-  const [mascotPosition, setMascotPosition] = useState(initialMascotPosition);
-  const mascotAnimatedPosition = useRef(new Animated.ValueXY(initialMascotPosition)).current;
-  const mascotPresence = useRef(new Animated.Value(0)).current;
-  const closeTargetPresence = useRef(new Animated.Value(0)).current;
-  const latestMascotPosition = useRef(initialMascotPosition);
-  const hasDraggedMascot = useRef(false);
-  const isMounted = useRef(true);
-  const donatePopupOpenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const closeTargetSize = clamp(width * 0.14, 52, 60);
-  const closeTargetBottom = getTabBarReservedHeight(insets.bottom) - 8;
-  const closeTargetRect = useMemo(
-    () => ({
-      left: width / 2 - closeTargetSize / 2 - 14,
-      right: width / 2 + closeTargetSize / 2 + 14,
-      top: height - closeTargetBottom - closeTargetSize - 14,
-      bottom: height - closeTargetBottom + 14
-    }),
-    [closeTargetBottom, closeTargetSize, height, width]
-  );
-  const donationPopupEnabled = settings?.donation_popup_enabled ?? true;
-  const donationPopupSettingLoaded = settings !== null;
-  const loadedLevel = profile?.current_level;
-  const canShowDonationMascot =
-    donationPopupSettingLoaded &&
-    typeof loadedLevel === 'number' &&
-    loadedLevel >= 2 &&
-    donationPopupEnabled &&
-    isFocused &&
-    !mascotDismissed &&
-    donationMascotCooldownPassed;
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchSettings(user.id);
-    }
-  }, [fetchSettings, user?.id]);
-
-  useEffect(() => {
-    let active = true;
-
-    async function checkDonationMascotCooldown() {
-      if (!user?.id || typeof loadedLevel !== 'number' || loadedLevel < 2) {
-        if (active) setDonationMascotCooldownPassed(false);
-        return;
-      }
-
-      const today = getLocalDateKey();
-      const lastSeen = await AsyncStorage.getItem(getDonationMascotSeenKey(user.id));
-      if (active) setDonationMascotCooldownPassed(lastSeen !== today);
-    }
-
-    checkDonationMascotCooldown().catch(() => {
-      if (active) setDonationMascotCooldownPassed(true);
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [loadedLevel, user?.id]);
-
-  useEffect(() => {
-    if (donationPopupEnabled) {
-      setMascotDismissed(false);
-    }
-  }, [donationPopupEnabled]);
-
-  useEffect(() => {
-    if (showDonateMascot || isDraggingMascot) return;
-    latestMascotPosition.current = initialMascotPosition;
-    setMascotPosition(initialMascotPosition);
-    mascotAnimatedPosition.setValue(initialMascotPosition);
-  }, [initialMascotPosition, isDraggingMascot, mascotAnimatedPosition, showDonateMascot]);
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-
-    if (canShowDonationMascot) {
-      timer = setTimeout(() => {
-        setShowDonateMascot(true);
-        Animated.spring(mascotPresence, {
-          toValue: 1,
-          useNativeDriver: true,
-          bounciness: 8,
-          speed: 12
-        }).start();
-      }, 1000);
-    } else {
-      mascotPresence.stopAnimation();
-      setShowDonateMascot(false);
-      setIsDraggingMascot(false);
-      closeTargetPresence.setValue(0);
-      mascotPresence.setValue(0);
-    }
-
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [canShowDonationMascot, closeTargetPresence, mascotPresence]);
-
-  useEffect(() => {
-    Animated.spring(closeTargetPresence, {
-      toValue: isDraggingMascot ? 1 : 0,
-      useNativeDriver: true,
-      bounciness: 6,
-      speed: 16
-    }).start();
-  }, [closeTargetPresence, isDraggingMascot]);
-
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-      if (donatePopupOpenTimer.current) {
-        clearTimeout(donatePopupOpenTimer.current);
-      }
-      mascotPresence.stopAnimation();
-      closeTargetPresence.stopAnimation();
-      mascotAnimatedPosition.stopAnimation();
-    };
-  }, [closeTargetPresence, mascotAnimatedPosition, mascotPresence]);
-
-  const dismissDonateMascot = useCallback(() => {
-    if (user?.id) {
-      AsyncStorage.setItem(getDonationMascotSeenKey(user.id), getLocalDateKey()).catch(() => undefined);
-    }
-    Animated.timing(mascotPresence, {
-      toValue: 0,
-      duration: 160,
-      useNativeDriver: true
-    }).start(() => {
-      if (!isMounted.current) return;
-      setMascotDismissed(true);
-      setDonationMascotCooldownPassed(false);
-      setShowDonateMascot(false);
-    });
-  }, [mascotPresence, user?.id]);
-
-  const openDonationPopup = useCallback(() => {
-    if (user?.id) {
-      AsyncStorage.setItem(getDonationMascotSeenKey(user.id), getLocalDateKey()).catch(() => undefined);
-    }
-    if (donatePopupOpenTimer.current) {
-      clearTimeout(donatePopupOpenTimer.current);
-    }
-    donatePopupOpenTimer.current = setTimeout(() => {
-      if (isMounted.current) setDonatePopupVisible(true);
-      donatePopupOpenTimer.current = null;
-    }, 80);
-    setDonationMascotCooldownPassed(false);
-  }, [user?.id]);
-
-  const mascotPanResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 3 || Math.abs(gesture.dy) > 3,
-        onPanResponderGrant: () => {
-          hasDraggedMascot.current = false;
-          mascotAnimatedPosition.stopAnimation((position) => {
-            latestMascotPosition.current = position;
-          });
-        },
-        onPanResponderMove: (_, gesture) => {
-          if (!hasDraggedMascot.current && (Math.abs(gesture.dx) > 3 || Math.abs(gesture.dy) > 3)) {
-            hasDraggedMascot.current = true;
-            setIsDraggingMascot(true);
-          }
-
-          const nextPosition = {
-            x: clamp(latestMascotPosition.current.x + gesture.dx, 0, Math.max(width - mascotOverlayWidth, 0)),
-            y: clamp(
-              latestMascotPosition.current.y + gesture.dy,
-              0,
-              Math.max(height - getTabBarReservedHeight(insets.bottom) - mascotOverlayHeight, 0)
-            )
-          };
-          mascotAnimatedPosition.setValue(nextPosition);
-        },
-        onPanResponderRelease: (_, gesture) => {
-          const finalPosition = {
-            x: clamp(latestMascotPosition.current.x + gesture.dx, 0, Math.max(width - mascotOverlayWidth, 0)),
-            y: clamp(
-              latestMascotPosition.current.y + gesture.dy,
-              0,
-              Math.max(height - getTabBarReservedHeight(insets.bottom) - mascotOverlayHeight, 0)
-            )
-          };
-
-          latestMascotPosition.current = finalPosition;
-          setMascotPosition(finalPosition);
-          mascotAnimatedPosition.setValue(finalPosition);
-          setIsDraggingMascot(false);
-
-          const releasedOverClose =
-            gesture.moveX >= closeTargetRect.left &&
-            gesture.moveX <= closeTargetRect.right &&
-            gesture.moveY >= closeTargetRect.top &&
-            gesture.moveY <= closeTargetRect.bottom;
-
-          if (hasDraggedMascot.current && releasedOverClose) {
-            dismissDonateMascot();
-            return;
-          }
-
-          if (!hasDraggedMascot.current) {
-            openDonationPopup();
-          }
-        },
-        onPanResponderTerminate: () => {
-          setIsDraggingMascot(false);
-          mascotAnimatedPosition.setValue(mascotPosition);
-        }
-      }),
-    [
-      closeTargetRect.bottom,
-      closeTargetRect.left,
-      closeTargetRect.right,
-      closeTargetRect.top,
-      dismissDonateMascot,
-      height,
-      insets.bottom,
-      mascotAnimatedPosition,
-      mascotOverlayHeight,
-      mascotOverlayWidth,
-      mascotPosition,
-      openDonationPopup,
-      width
-    ]
-  );
 
   useFocusEffect(
     useCallback(() => {
@@ -449,61 +195,6 @@ export function DashboardScreen() {
         </View>
       </ScrollView>
 
-      {showDonateMascot && (
-        <Animated.View
-          style={[
-            styles.donateMascotOverlay,
-            {
-              width: mascotOverlayWidth,
-              height: mascotOverlayHeight,
-              opacity: mascotPresence,
-              transform: [
-                ...mascotAnimatedPosition.getTranslateTransform(),
-                {
-                  scale: mascotPresence.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.82, 1]
-                  })
-                }
-              ]
-            }
-          ]}
-          {...mascotPanResponder.panHandlers}
-        >
-          <Image
-            source={donationPopupImage}
-            style={[styles.donateMascotImage, { width: mascotSize, height: mascotSize }]}
-            resizeMode="contain"
-          />
-        </Animated.View>
-      )}
-
-      <Animated.View
-        pointerEvents={isDraggingMascot ? 'auto' : 'none'}
-        style={[
-          styles.closeDropTarget,
-          {
-            width: closeTargetSize,
-            height: closeTargetSize,
-            borderRadius: closeTargetSize / 2,
-            bottom: closeTargetBottom,
-            marginLeft: -closeTargetSize / 2,
-            opacity: closeTargetPresence,
-            transform: [
-              {
-                scale: closeTargetPresence.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.75, 1]
-                })
-              }
-            ]
-          }
-        ]}
-      >
-        <X size={26} color="#FFFFFF" strokeWidth={2.5} />
-      </Animated.View>
-
-      <DonationModal visible={donatePopupVisible} onClose={() => setDonatePopupVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -652,18 +343,6 @@ function getCompletedStagesInLevel(stageInLevel: number, currentLevel: number, c
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
-}
-
-function getDonationMascotSeenKey(userId: string) {
-  return `${donationMascotSeenPrefix}:${userId}`;
-}
-
-function getLocalDateKey() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
 
 function getDashboardResponsiveStyles(width: number, height: number, bottomInset: number) {
@@ -1101,30 +780,6 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(0,0,0,0.05)'
-  },
-  donateMascotOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    zIndex: 20,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  donateMascotImage: {
-    flexShrink: 0
-  },
-  closeDropTarget: {
-    position: 'absolute',
-    left: '50%',
-    zIndex: 25,
-    backgroundColor: 'rgba(17,17,17,0.92)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000000',
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6
   },
   goalLinesRow: {
     flexDirection: 'row',

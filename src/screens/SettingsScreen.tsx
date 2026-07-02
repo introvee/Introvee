@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Modal, ActivityIndicator, Alert, TextInput, Switch, useWindowDimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Modal, Alert, TextInput, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronRight, Trash2, Check } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/useAuthStore';
-import { useSettingsStore } from '../store/useSettingsStore';
 import { supabase } from '../lib/supabase';
 import { getBottomSafeSpace, getTabBarReservedHeight } from '../constants/layout';
 import { clamp, getResponsivePageMetrics } from '../constants/responsive';
@@ -34,30 +33,15 @@ export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const settings = useSettingsStore((state) => state.settings);
-  const fetchSettings = useSettingsStore((state) => state.fetchSettings);
-  const updateSettings = useSettingsStore((state) => state.updateSettings);
   
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
   const [deleteChecked, setDeleteChecked] = useState(false);
 
-  useEffect(() => {
-    if (user?.id) {
-      fetchSettings(user.id);
-    }
-  }, [fetchSettings, user?.id]);
-
-  const donationPopupEnabled = settings?.donation_popup_enabled ?? true;
   const metrics = getResponsivePageMetrics(width, height);
   const bottomSpace = getBottomSafeSpace(insets.bottom);
   const modalMaxHeight = Math.max(320, height - insets.top - bottomSpace - 32);
-
-  const handleDonationPopupToggle = (enabled: boolean) => {
-    if (!user?.id) return;
-    updateSettings(user.id, { donation_popup_enabled: enabled });
-  };
 
   const handleDeleteAccount = async () => {
     if (!user?.id) return;
@@ -119,19 +103,6 @@ export function SettingsScreen() {
         {/* Section 2: App */}
         <Text style={styles.sectionTitle}>App</Text>
         <View style={[styles.card, { borderRadius: metrics.cardRadius, paddingHorizontal: metrics.cardPadding }]}>
-          <View style={[styles.row, styles.borderBottom]}>
-            <View style={styles.rowLeft}>
-              <Text style={[styles.rowTitle, { fontSize: metrics.bodySize }]}>Donation popup</Text>
-              <Text style={[styles.rowDesc, { fontSize: metrics.smallSize }]}>Show donation mascot popup on Home screen</Text>
-            </View>
-            <Switch
-              value={donationPopupEnabled}
-              onValueChange={handleDonationPopupToggle}
-              trackColor={{ false: '#D8D8D8', true: '#1C1C1E' }}
-              thumbColor={C.white}
-              ios_backgroundColor="#D8D8D8"
-            />
-          </View>
           <TouchableOpacity style={[styles.navRow, styles.borderBottom]} onPress={() => navigation.navigate('HelpSupport')}>
             <Text style={[styles.rowTitle, { fontSize: metrics.bodySize }]}>Help / Support</Text>
             <ChevronRight size={20} color={C.muted} />

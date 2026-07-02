@@ -7,7 +7,6 @@ interface UserSettings {
   notifications_enabled: boolean;
   sound_enabled: boolean;
   haptics_enabled: boolean;
-  donation_popup_enabled: boolean;
 }
 
 interface SettingsState {
@@ -21,7 +20,6 @@ const defaultSettings: UserSettings = {
   notifications_enabled: true,
   sound_enabled: true,
   haptics_enabled: true,
-  donation_popup_enabled: true,
 };
 
 const devBypassUserId = '00000000-0000-4000-8000-000000000001';
@@ -38,7 +36,6 @@ function normalizeSettings(data: Partial<UserSettings> | null | undefined): User
   return {
     ...defaultSettings,
     ...data,
-    donation_popup_enabled: data?.donation_popup_enabled ?? true,
   };
 }
 
@@ -113,7 +110,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             notifications_enabled: data.notifications_enabled,
             sound_enabled: data.sound_enabled,
             haptics_enabled: data.haptics_enabled,
-            donation_popup_enabled: data.donation_popup_enabled,
           });
           const nextSettings = localSettings ? { ...remoteSettings, ...localSettings } : remoteSettings;
           loadedSettingsUserId = userId;

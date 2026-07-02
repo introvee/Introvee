@@ -123,10 +123,6 @@ export function HelpSupportScreen() {
             question="Can I change my profile details?"
             answer="Yes. You can edit your name, profile picture, age, gender, and life category from your Profile page if editing is enabled."
           />
-          <FAQItem
-            question="How can I disable the donation popup on the Home screen?"
-            answer="You can disable it from Settings. Go to Settings and turn off the “Donation popup” option. After that, the donation mascot will no longer appear on your Home screen."
-          />
           <FAQItem 
             question="Is my profile photo shared automatically?"
             answer="No. Your profile photo is only used inside the app and on your completion poster. You decide whether to share the poster outside the app."

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  Image,
   Pressable,
   SectionList,
   StyleSheet,
@@ -28,7 +27,6 @@ import { clamp, getResponsivePageMetrics } from '../constants/responsive';
 import { getBadgeCount } from '../services/progressService';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProfileStore } from '../store/useProfileStore';
-import { DonationModal } from '../components/DonationModal';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -54,8 +52,6 @@ const sampleTitles: Record<number, string> = {
   9: 'Call instead of text',
   10: 'Small intro'
 };
-
-const donationMascot = require('../../assets/images/donate-mascot.png');
 
 // ── Circular progress ring ─────────────────────────────────────────────────────
 function CircularProgress({ percent, size }: { percent: number; size: number }) {
@@ -104,7 +100,6 @@ export function ProgressScreen() {
   const [badgeCount, setBadgeCount] = useState(0);
   const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
   const [hasInitializedExpandedLevel, setHasInitializedExpandedLevel] = useState(false);
-  const [donationModalVisible, setDonationModalVisible] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -196,14 +191,6 @@ export function ProgressScreen() {
     setExpandedLevel((prev) => (prev === levelNumber ? null : levelNumber));
   };
 
-  const openDonationModal = () => {
-    setDonationModalVisible(true);
-  };
-
-  const closeDonationModal = () => {
-    setDonationModalVisible(false);
-  };
-
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       {/* ── Fixed Top Content ────────────────────────────────── */}
@@ -266,33 +253,6 @@ export function ProgressScreen() {
         ]}
       >
         <Text style={[s.sectionTitle, { fontSize: clamp(width * 0.046, 17, 19), marginBottom: veryCompact ? 8 : 12 }]}>Your Path</Text>
-
-        <View style={[s.donationCard, { padding: veryCompact ? 10 : compact ? 12 : 16, marginBottom: veryCompact ? 8 : compact ? 10 : 16 }]}>
-          <Image
-            source={donationMascot}
-            style={[s.donationMascot, { width: veryCompact ? 50 : compact ? 58 : 80, height: veryCompact ? 50 : compact ? 58 : 80, marginRight: compact ? 10 : 14 }]}
-            resizeMode="contain"
-          />
-          <View style={s.donationCopy}>
-            <Text style={[s.donationSubtext, { fontSize: metrics.smallSize, lineHeight: metrics.smallSize + 4, marginBottom: veryCompact ? 2 : 4 }]} numberOfLines={2}>
-              Hey, I helped you build your confidence
-            </Text>
-            <Text style={[s.donationTitle, { fontSize: clamp(width * 0.05, 18, 23), lineHeight: clamp(width * 0.062, 23, 28), marginBottom: compact ? 7 : 12 }]} numberOfLines={1} adjustsFontSizeToFit>
-              Support Introvee
-            </Text>
-            <Text style={[s.donationCompliance, { fontSize: metrics.smallSize - 1, lineHeight: metrics.smallSize + 3 }]} numberOfLines={compact ? 2 : 3}>
-              Donations are optional and do not unlock any app features or content.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Donate to support Introvee"
-              onPress={openDonationModal}
-              style={({ pressed }) => [s.donateButton, { minHeight: veryCompact ? 32 : compact ? 34 : 38, paddingVertical: veryCompact ? 7 : 9 }, pressed && s.pressed]}
-            >
-              <Text style={s.donateButtonText}>Donate</Text>
-            </Pressable>
-          </View>
-        </View>
 
         {/* ── Scrollable Level List Card (Accordion) ───────────── */}
         <View style={s.pathContainer}>
@@ -411,10 +371,6 @@ export function ProgressScreen() {
         </View>
       </View>
 
-      <DonationModal
-        visible={donationModalVisible}
-        onClose={closeDonationModal}
-      />
     </SafeAreaView>
   );
 }
@@ -483,78 +439,6 @@ const s = StyleSheet.create({
     paddingVertical: 16,
     paddingBottom: 24,
   },
-  donationCard: {
-    backgroundColor: C.white,
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-    shadowColor: C.shadow,
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 3,
-  },
-  donationMascot: {
-    width: 80,
-    height: 80,
-    marginRight: 14,
-    flexShrink: 0,
-  },
-  donationCopy: {
-    flex: 1,
-    minWidth: 0,
-    alignItems: 'flex-start',
-  },
-  donationTitle: {
-    color: C.text,
-    fontSize: 22,
-    lineHeight: 27,
-    fontFamily: fonts.bold,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-    marginBottom: 12,
-  },
-  donationSubtext: {
-    color: C.sub,
-    fontSize: 13,
-    lineHeight: 18,
-    fontFamily: fonts.regular,
-    fontWeight: '400',
-    marginBottom: 4,
-  },
-  donationCompliance: {
-    color: C.muted,
-    fontSize: 12,
-    lineHeight: 16,
-    fontFamily: fonts.regular,
-    marginBottom: 8,
-  },
-  donateButton: {
-    backgroundColor: C.text,
-    borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-    minHeight: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: C.shadow,
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
-  },
-  donateButtonText: {
-    color: C.white,
-    fontSize: 13,
-    lineHeight: 16,
-    fontFamily: fonts.bold,
-    fontWeight: '700',
-  },
-
   // Level headers (Accordion)
   levelHeader: {
     flexDirection: 'row',
