@@ -195,15 +195,6 @@ export function ProgressScreen() {
     <SafeAreaView style={s.screen} edges={['top']}>
       {/* ── Fixed Top Content ────────────────────────────────── */}
       <View style={[s.topContent, { paddingHorizontal: hPad, gap: topGap, maxWidth: metrics.maxWidth, alignSelf: 'center', width: '100%', paddingTop: veryCompact ? 8 : compact ? 10 : 14 }]}>
-        {/* Header */}
-        <View style={s.header}>
-          <View style={s.headerLeft}>
-          <Text style={[s.headerGreeting, { fontSize: metrics.bodySize }]} numberOfLines={1} adjustsFontSizeToFit>
-            Hi {profile.name || 'Alex'} 👋
-          </Text>
-          </View>
-        </View>
-
         {/* Title row */}
         <View style={s.titleRow}>
           <Text style={[s.pageTitle, { fontSize: metrics.headerTitleSize }]}>Progress</Text>
@@ -382,11 +373,6 @@ const s = StyleSheet.create({
     gap: 16,
     paddingBottom: 0,
   },
-  
-  // Header
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerLeft: { flex: 1 },
-  headerGreeting: { color: C.sub, fontSize: 18, lineHeight: 24, fontFamily: fonts.regular, marginBottom: 2 },
   
   // Title row
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
