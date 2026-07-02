@@ -77,13 +77,13 @@ export function DonationModal({ visible, onClose }: Props) {
 
     if (isIndia) {
       try {
-        const payeeName = encodeURIComponent('Introvee');
+        const payeeName = encodeURIComponent('KARTHICK K');
         const transactionNote = encodeURIComponent('Introvee Support');
-        const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${payeeName}&tn=${transactionNote}&am=${numericAmount}&cu=INR`;
+        const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${payeeName}&am=${numericAmount}&cu=INR&tn=${transactionNote}`;
         await Linking.openURL(upiUrl);
         onClose();
       } catch (error) {
-        Alert.alert('UPI app not found', 'No UPI app found on this device, or UPI payments are not available right now.');
+        Alert.alert('UPI app not found', 'No UPI app found. Please install Google Pay, PhonePe, Paytm, or BHIM.');
       }
     } else {
       try {
